@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${vcpkgRoot}/arm64-osx/include"
+        // "/opt/homebrew/Cellar/sdl2/2.0.22/include",
+        // "/opt/homebrew/Cellar/sdl2_image/2.0.5/include/",
+        // "/opt/homebrew/Cellar/sdl2_mixer/2.0.4_3/include",
+        // "/opt/homebrew/Cellar/lua/5.4.4_1/include"
+      ],
+      "defines": [],
+      "macFrameworkPath": [],
+      "compilerPath": "/opt/homebrew/bin/gcc-11",
+      "cStandard": "gnu17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "macos-gcc-arm64",
+      "configurationProvider": "ms-vscode.makefile-tools"
+    }
+  ],
+  "version": 4
+}

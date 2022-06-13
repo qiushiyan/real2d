@@ -1,4 +1,5 @@
-.PHONY: build Sclean
+
+.PHONY: build clean
 
 build:
 	cmake --build build

@@ -1,17 +1,12 @@
 #include "game.hpp"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <glm/glm.hpp>
 #include <exception>
-#include <stdexcept> // for std::runtime_error
+#include <stdexcept>
 
-// Game::Game()
-// {
-//     Game::init();
-// }
-
-// Game::~Game()
-// {
-//     Game::destroy();
-// }
+glm::vec2 playerPosition{10, 10};
+glm::vec2 velocity{60, 30};
 
 void Game::init()
 {
@@ -53,6 +48,11 @@ void Game::run()
     }
 }
 
+void Game::setup()
+{
+    // create game objects
+}
+
 void Game::destroy()
 {
     SDL_DestroyWindow(window);
@@ -80,13 +80,38 @@ void Game::process_input()
     }
 }
 
-void Game::render()
-{
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-}
-
 void Game::update()
 {
+
+    auto current_ticks = SDL_GetTicks();
+    auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
+    // delta time
+    float dt = (current_ticks - cum_ticks) / 1000.0f;
+
+    if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
+    {
+        SDL_Delay(time_to_wait);
+    }
+
+    cum_ticks = SDL_GetTicks();
+    playerPosition.x += (velocity.x * dt);
+    playerPosition.y += (velocity.y * dt);
+}
+
+void Game::render()
+{
+    SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
+    SDL_RenderClear(renderer);
+    auto surface = IMG_Load("../assets/images/tank-tiger-right.png");
+    auto texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    auto dest_rect = SDL_Rect{
+        static_cast<int>(playerPosition.x),
+        static_cast<int>(playerPosition.y),
+        32,
+        32};
+    SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
+    SDL_DestroyTexture(texture);
+    SDL_RenderPresent(renderer);
 }

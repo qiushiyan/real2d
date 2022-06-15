@@ -8,6 +8,7 @@ class Game
 {
 private:
     bool running{false};
+    unsigned int cum_ticks{0};
     SDL_Window *window;
     SDL_Renderer *renderer;
 
@@ -16,6 +17,7 @@ public:
     ~Game(){};
 
     void init();
+    void setup();
     void run();
     void destroy();
     void process_input();

@@ -1,9 +1,11 @@
 #include "game.hpp"
+#include "logger.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <glm/glm.hpp>
 #include <exception>
 #include <stdexcept>
+using namespace std::string_literals;
 
 glm::vec2 playerPosition{10, 10};
 glm::vec2 velocity{60, 30};
@@ -12,7 +14,8 @@ void Game::init()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
-        throw std::runtime_error("Game initialization failed.");
+        Logger::error("SDL initialization failed."s);
+        return;
     }
 
     SDL_DisplayMode displayMode;
@@ -22,7 +25,8 @@ void Game::init()
 
     if (!window)
     {
-        throw std::runtime_error("Error creating SDL widow.");
+        Logger::error("Creating SDL window failed."s);
+        return;
     }
 
     // -1 means default renderer
@@ -30,7 +34,8 @@ void Game::init()
 
     if (!renderer)
     {
-        throw std::runtime_error("Error creating renderer.");
+        Logger::error("Creating renderer failed."s);
+        return;
     }
 
     SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);

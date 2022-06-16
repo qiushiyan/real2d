@@ -1,5 +1,16 @@
 {
   "cmake.configureSettings": {
     "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  },
+  "files.associations": {
+    "*.js": "javascript",
+    "*.vue": "vue",
+    "*.ejs": "html",
+    "*.html": "html",
+    "*.jsx": "javascriptreact",
+    "*.ipynb": "jupyter.notebook.ipynb",
+    "*.Rmarkdown": "rmd",
+    "*.json": "jsonc",
+    "chrono": "cpp"
   }
 }

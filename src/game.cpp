@@ -1,14 +1,12 @@
-#include "game.hpp"
-#include <logger.hpp>
+#include "Game.hpp"
+#include "ECS.hpp"
+#include <Logger.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <glm/glm.hpp>
 #include <exception>
 #include <stdexcept>
 using namespace std::string_literals;
-
-glm::vec2 playerPosition{10, 10};
-glm::vec2 velocity{60, 30};
 
 void Game::init()
 {
@@ -55,7 +53,7 @@ void Game::run()
 
 void Game::setup()
 {
-    // create game objects
+    // auto entity{Registry::create_entity()};
 }
 
 void Game::destroy()
@@ -99,24 +97,25 @@ void Game::update()
     }
 
     cum_ticks = SDL_GetTicks();
-    playerPosition.x += (velocity.x * dt);
-    playerPosition.y += (velocity.y * dt);
+    // MovementSystem::update(dt);
+    // CollisionSystem::update(dt);
+    // DamageSystem::update(dt);
 }
 
 void Game::render()
 {
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
-    auto surface = IMG_Load("../assets/images/tank-tiger-right.png");
-    auto texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
+    // auto surface = IMG_Load("../assets/images/tank-tiger-right.png");
+    // auto texture = SDL_CreateTextureFromSurface(renderer, surface);
+    // SDL_FreeSurface(surface);
 
-    auto dest_rect = SDL_Rect{
-        static_cast<int>(playerPosition.x),
-        static_cast<int>(playerPosition.y),
-        32,
-        32};
-    SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
-    SDL_DestroyTexture(texture);
+    // auto dest_rect = SDL_Rect{
+    //     static_cast<int>(playerPosition.x),
+    //     static_cast<int>(playerPosition.y),
+    //     32,
+    //     32};
+    // SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
+    // SDL_DestroyTexture(texture);
     SDL_RenderPresent(renderer);
 }

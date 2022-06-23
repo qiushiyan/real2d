@@ -15,7 +15,7 @@ find_package(sol2 CONFIG REQUIRED)
 
 add_subdirectory(src/lib/logger)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-add_executable(main src/main.cpp src/game.cpp)
+add_executable(main src/main.cpp src/Game.cpp)
 target_include_directories(main PRIVATE ${LUA_INCLUDE_DIR})
 target_link_libraries(main PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
 target_link_libraries(main PRIVATE SDL2::SDL2_image)

@@ -8,7 +8,7 @@ class Game
 {
 private:
     bool running{false};
-    unsigned int cum_ticks{0};
+    std::uint64_t cum_ticks{0};
     SDL_Window *window;
     SDL_Renderer *renderer;
 

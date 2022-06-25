@@ -45,6 +45,11 @@
     "tuple": "cpp",
     "typeinfo": "cpp",
     "utility": "cpp",
-    "typeindex": "cpp"
+    "typeindex": "cpp",
+    "bit": "cpp",
+    "cwctype": "cpp",
+    "set": "cpp",
+    "memory": "cpp",
+    "ostream": "cpp"
   }
 }

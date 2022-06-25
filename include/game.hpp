@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "constants.hpp"
+#include "ECS.hpp"
 
 class Game
 {
@@ -11,10 +12,10 @@ private:
     std::uint64_t cum_ticks{0};
     SDL_Window *window;
     SDL_Renderer *renderer;
+    std::unique_ptr<Registry> registry;
 
 public:
-    Game(){};
-    ~Game(){};
+    Game();
 
     void init();
     void setup();

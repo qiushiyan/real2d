@@ -6,7 +6,15 @@
 #include <glm/glm.hpp>
 #include <exception>
 #include <stdexcept>
+#include <memory>
 using namespace std::string_literals;
+
+Game::Game()
+{
+    registry = std::make_unique<Registry>();
+
+
+}
 
 void Game::init()
 {

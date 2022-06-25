@@ -17,7 +17,7 @@ std::vector<Entity> System::entities() const
 {
     return _entities;
 };
-const Signature &System::signature() const
+const Signature &System::get_component_signature() const
 {
     return component_signature;
 };

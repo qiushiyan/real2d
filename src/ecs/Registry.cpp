@@ -2,7 +2,6 @@
 #include "Logger.hpp"
 #include <string>
 #include <memory>
-#include "iostream"
 
 Entity Registry::create_entity()
 {

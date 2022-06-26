@@ -34,16 +34,26 @@ public:
         data.clear();
     };
 
-    bool empty() const {
-        return data.empty()};
-    bool size() const {
-        return data.size()};
-    void clear(){
-        data.clear()};
-    void resize(std::uint8_t n){
-        data.resize(n)};
-    void add(T element){
-        data.push_back(element)};
+    bool empty() const
+    {
+        return data.empty();
+    };
+    bool size() const
+    {
+        return data.size();
+    };
+    void clear()
+    {
+        data.clear();
+    };
+    void resize(std::uint8_t n)
+    {
+        data.resize(n);
+    };
+    void add(T element)
+    {
+        data.push_back(element);
+    };
     void set(std::uint8_t, T element)
     {
         data[index] = element;

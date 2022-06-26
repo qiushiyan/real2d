@@ -1,49 +1,49 @@
 #include "ECS.hpp"
 
 template <typename T>
-class Pool
+bool Pool<T>::empty() const
 {
-private:
-    std::vector<T> data;
+    return data.empty();
+};
 
-public:
-    Pool(std::uint8_t n = 100)
-    {
-        resize(n)
-    }
-    ~Pool()
-    {
-        data.clear();
-    }
+template <typename T>
+bool Pool<T>::size() const
+{
+    return data.size();
+};
 
-    bool empty() const
-    {
-        return data.empty();
-    };
-    bool size() const
-    {
-        return data.size();
-    };
-    void clear()
-    {
-        data.clear();
-    };
-    void resize(std::uint8_t n)
-    {
-        data.resize(n);
-    };
-    void add(T element)
-    {
-        data.push_back(element);
-    };
-    void set(std::uint8_t, T element)
-    {
-        data[index] = element;
-    };
-    T &get(std::uint8_t index) const
-    {
-        return static_cast<T &>(data[index]);
-    };
-    T &operator[](std::uint8_t index) const {
-        return data[index]};
+template <typename T>
+void Pool<T>::clear()
+{
+    data.clear();
+};
+
+template <typename T>
+void resize(std::uint8_t n)
+{
+    data.resize(n);
+};
+
+template <typename T>
+void Pool<T>::add(T element)
+{
+    data.push_back(element);
+};
+
+template <typename T>
+void Pool<T>::set(std::uint8_t, T element)
+{
+    data[index] = element;
+};
+
+template <typename T>
+T &Pool<T>::get(std::uint8_t index) const
+{
+    return static_cast<T &>(data[index]);
+};
+
+template <typename T>
+T &Pool<T>::operator[](std::uint8_t index) const
+{
+    return data[index];
 };

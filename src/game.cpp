@@ -12,8 +12,6 @@ using namespace std::string_literals;
 Game::Game()
 {
     registry = std::make_unique<Registry>();
-
-
 }
 
 void Game::init()
@@ -61,6 +59,8 @@ void Game::run()
 
 void Game::setup()
 {
+    registry->create_entity();
+    registry->create_entity();
     // auto entity{Registry::create_entity()};
 }
 
@@ -105,6 +105,7 @@ void Game::update()
     }
 
     cum_ticks = SDL_GetTicks();
+    registry->update();
     // MovementSystem::update(dt);
     // CollisionSystem::update(dt);
     // DamageSystem::update(dt);

@@ -1,3 +1,3 @@
 #include "ECS.hpp"
 
-std::uint8_t IComponent::id = 0;
+std::uint8_t IComponent::_id = 0;

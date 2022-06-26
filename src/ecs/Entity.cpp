@@ -14,3 +14,15 @@ bool Entity::operator==(const Entity &other) const
 {
     return _id == other.id();
 }
+bool Entity::operator!=(const Entity &other) const
+{
+    return _id != other.id();
+}
+bool Entity::operator>(const Entity &other) const
+{
+    return _id > other.id();
+}
+bool Entity::operator<(const Entity &other) const
+{
+    return _id < other.id();
+}

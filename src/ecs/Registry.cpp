@@ -2,6 +2,7 @@
 #include "Logger.hpp"
 #include <string>
 #include <memory>
+#include "iostream"
 
 Entity Registry::create_entity()
 {
@@ -11,7 +12,7 @@ Entity Registry::create_entity()
         entity_component_signatures.resize(id + 1);
     }
     auto entity{Entity{id}};
-    // Logger::info("Created entity with id: " + std::to_string(id));
+    Logger::info("Created entity with id: " + std::to_string(id));
     entities_to_add.insert(entity);
 
     return entity;
@@ -33,10 +34,10 @@ void Registry::add_component(Entity entity, TArgs &&...args)
 
     if (!component_pools[component_id])
     {
-        component_pools[component_id] = std::make_unique<Pool<TComponent>>();
+        component_pools[component_id] = std::make_shared<Pool<TComponent>>();
     }
 
-    Pool<TComponent> *component_pool_ptr = component_pools[component_id];
+    std::shared_ptr<Pool<TComponent>> component_pool_ptr = component_pools[component_id];
 
     if (entity_id > component_pool_ptr->size())
     {
@@ -56,7 +57,7 @@ void Registry::remove_component(Entity entity)
 {
     const auto entity_id = entity.id();
     const auto component_id = Component<TComponent>::id();
-    entity_component_signatures[entity_id].set(component_id, false)
+    entity_component_signatures[entity_id].set(component_id, false);
 }
 
 template <typename TComponent>
@@ -73,9 +74,10 @@ bool Registry::has_component(Entity entity) const
 template <typename TSystem, typename... TArgs>
 void Registry::add_system(TArgs &&...args)
 {
-    TSystem *new_system_ptr{new TSystem(std::forward<TArgs>(args)...)};
+    std::shared_ptr<TSystem> new_system_ptr = std::make_shared<TSystem>(std::forward<TArgs>(args)...);
     systems.insert(std::make_pair(std::type_index(typeid(TSystem)), new_system_ptr));
 }
+
 template <typename TSystem>
 void Registry::remove_system()
 {
@@ -99,7 +101,7 @@ void Registry::add_entity_to_systems(Entity entity)
 {
     const auto entity_id = entity.id();
     const auto &entity_component_signature = entity_component_signatures[entity_id];
-    for (const auto system_pair : systems)
+    for (const auto &system_pair : systems)
     {
         // const auto& system_component_signature =
         const auto &system_component_signature = system_pair.second->get_component_signature();

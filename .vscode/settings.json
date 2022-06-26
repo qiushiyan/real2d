@@ -50,6 +50,8 @@
     "cwctype": "cpp",
     "set": "cpp",
     "memory": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "iostream": "cpp",
+    "istream": "cpp"
   }
 }

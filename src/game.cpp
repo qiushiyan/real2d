@@ -59,8 +59,9 @@ void Game::run()
 
 void Game::setup()
 {
-    registry->create_entity();
-    registry->create_entity();
+    auto entity = registry->create_entity();
+    registry->add_component<TransformComponent>(entity, glm::vec2(0.0, 0.0), glm::vec2(0.0, 0.0), 1);
+
     // auto entity{Registry::create_entity()};
 }
 

@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <iostream>
+#include <Logger.hpp>
 
 using constants::Signature;
 
@@ -129,16 +130,26 @@ class Entity
 {
 private:
     int _id{0};
+    class Registry *registry;
     Signature component_signature;
 
 public:
-    Entity(int id) : _id(id){};
+    Entity(int id, Registry *registry) : _id(id), registry(registry){};
     void id(const int new_id);
     int id() const;
     bool operator==(const Entity &other) const;
     bool operator!=(const Entity &other) const;
     bool operator>(const Entity &other) const;
     bool operator<(const Entity &other) const;
+
+    template <typename TComponent, typename... TArgs>
+    void add_component(TArgs &&...args);
+    template <typename TComponent>
+    void remove_component();
+    template <typename TComponent>
+    bool &has_component() const;
+    template <typename TComponent>
+    TComponent &get_component() const;
 };
 
 class System
@@ -184,80 +195,143 @@ public:
 
     // component management for a specific entity
     template <typename TComponent, typename... TArgs>
-    void add_component(Entity &entity, TArgs &&...args)
-    {
-        const auto entity_id = entity.id();
-        const auto component_id = Component<TComponent>::id();
-        if (component_id > component_pools.size())
-        {
-            component_pools.resize(component_id + 1, nullptr);
-        }
-
-        if (!component_pools[component_id])
-        {
-            auto new_component_pool_ptr = std::make_shared<Pool<TComponent>>();
-            component_pools[component_id] = new_component_pool_ptr;
-        }
-
-        auto component_pool_ptr = std::static_pointer_cast<Pool<TComponent>>(component_pools[component_id]);
-
-        if (entity_id > component_pool_ptr->size())
-        {
-            component_pool_ptr->resize(num_entities);
-        }
-
-        // create new component
-        TComponent new_component(std::forward<TArgs>(args)...);
-
-        // add component to the pool, use entity id as index
-        component_pool_ptr->set(entity_id, new_component);
-
-        // set entity signature
-        entity_component_signatures.at(entity_id).set(component_id);
-    };
+    void add_component(Entity &entity, TArgs &&...args);
     template <typename TComponent>
-    void remove_component(Entity entity)
-    {
-        const auto entity_id = entity.id();
-        const auto component_id = Component<TComponent>::id();
-        entity_component_signatures.at(entity_id).set(component_id);
-    };
+    void remove_component(Entity entity);
     template <typename TComponent>
-    bool has_component(Entity entity) const
-    {
-        const auto entity_id = entity.id();
-        const auto component_id = Component<TComponent>::id();
-        return entity_component_signatures.at(entity_id).test(component_id);
-    };
+    bool has_component(Entity entity) const;
+    template <typename TComponent>
+    TComponent &get_component(Entity entity) const;
 
     // system management
     template <typename TSystem, typename... TArgs>
-    void add_system(TArgs &&...args)
-    {
-        std::shared_ptr<TSystem> new_system_ptr = std::make_shared<TSystem>(std::forward<TArgs>(args)...);
-        systems.insert(std::make_pair(std::type_index(typeid(TSystem)), new_system_ptr));
-    };
+    void add_system(TArgs &&...args);
     template <typename TSystem>
-    void remove_system()
-    {
-        auto it = systems.find(std::type_index(typeid(TSystem)));
-        systems.erase(it);
-    };
+    void remove_system();
     template <typename TSystem>
-    bool has_system() const
-    {
-        return systems.find(std::type_index(typeid(TSystem))) != systems.end() ? true : false;
-    };
+    bool has_system() const;
     template <typename TSystem>
-    TSystem &get_system() const
-    {
-        auto it = systems.find(std::type_index(typeid(TSystem)));
-        return *(std::static_pointer_cast<TSystem>(it->second));
-    };
+    TSystem &get_system() const;
 
     // check for entity component signature and add the entity to all systems that match the component
     void add_entity_to_systems(Entity entity);
     void update();
+};
+
+// ============================================================
+// implement templated member functions
+// ============================================================
+
+// Entity
+template <typename TComponent, typename... TArgs>
+void Entity::add_component(TArgs &&...args)
+{
+    registry->add_component<TComponent>(*this, std::forward<TArgs>(args)...);
+}
+
+template <typename TComponent>
+void Entity::remove_component()
+{
+    registry->remove_component<TComponent>(*this);
+}
+
+template <typename TComponent>
+bool &Entity::has_component() const
+{
+    return registry->has_component<TComponent>(*this);
+}
+
+template <typename TComponent>
+TComponent &Entity::get_component() const
+{
+    return registry->get_component<TComponent>(*this);
+}
+
+// Registry
+template <typename TComponent, typename... TArgs>
+void Registry::add_component(Entity &entity, TArgs &&...args)
+{
+    const auto entity_id = entity.id();
+    const auto component_id = Component<TComponent>::id();
+    if (component_id > component_pools.size())
+    {
+        component_pools.resize(component_id + 1, nullptr);
+    }
+
+    if (!component_pools[component_id])
+    {
+        auto new_component_pool_ptr = std::make_shared<Pool<TComponent>>();
+        component_pools[component_id] = new_component_pool_ptr;
+    }
+
+    auto component_pool_ptr = std::static_pointer_cast<Pool<TComponent>>(component_pools[component_id]);
+
+    if (entity_id > component_pool_ptr->size())
+    {
+        component_pool_ptr->resize(num_entities);
+    }
+
+    // create new component
+    TComponent new_component(std::forward<TArgs>(args)...);
+
+    // add component to the pool, use entity id as index
+    component_pool_ptr->set(entity_id, new_component);
+
+    // set entity signature
+    entity_component_signatures.at(entity_id).set(component_id);
+
+    Logger::info("added component " + std::to_string(component_id) + " to entity " + std::to_string(entity_id));
+};
+template <typename TComponent>
+void Registry::remove_component(Entity entity)
+{
+    const auto entity_id = entity.id();
+    const auto component_id = Component<TComponent>::id();
+    entity_component_signatures.at(entity_id).set(component_id, false);
+
+    Logger::info("remove component " + std::to_string(component_id) + " from entity " + std::to_string(entity_id));
+};
+template <typename TComponent>
+bool Registry::has_component(Entity entity) const
+{
+    const auto entity_id = entity.id();
+    const auto component_id = Component<TComponent>::id();
+    return entity_component_signatures.at(entity_id).test(component_id);
+};
+
+template <typename TComponent>
+TComponent &Registry::get_component(Entity entity) const
+{
+    const auto entity_id = entity.id();
+    const auto component_id = Component<TComponent>::id();
+    auto component_pool = std::static_pointer_cast<Pool<TComponent>>(component_pools.at(component_id));
+
+    return component_pool->get(entity_id);
+};
+
+// system management
+template <typename TSystem, typename... TArgs>
+void Registry::add_system(TArgs &&...args)
+{
+    std::shared_ptr<TSystem> new_system_ptr = std::make_shared<TSystem>(std::forward<TArgs>(args)...);
+    systems.insert(std::make_pair(std::type_index(typeid(TSystem)), new_system_ptr));
+};
+template <typename TSystem>
+void Registry::remove_system()
+{
+    auto it = systems.find(std::type_index(typeid(TSystem)));
+    systems.erase(it);
+};
+template <typename TSystem>
+bool Registry::has_system() const
+{
+    return systems.find(std::type_index(typeid(TSystem))) != systems.end() ? true : false;
+};
+template <typename TSystem>
+TSystem &Registry::get_system() const
+{
+    auto it = systems.find(std::type_index(typeid(TSystem)));
+    return *(std::static_pointer_cast<TSystem>(it->second));
 };
 
 #endif

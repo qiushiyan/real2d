@@ -52,8 +52,9 @@ void Game::init()
 void Game::setup()
 {
     auto entity = registry->create_entity();
-    registry->add_component<TransformComponent>(entity, vec2(10, 20), vec2(0.0, 0.0), 0.0);
-    registry->add_component<RigidBodyComponent>(entity, vec2(20, 10));
+    entity.add_component<TransformComponent>(vec2(10, 20), vec2(0.0, 0.0), 0.0);
+    entity.add_component<RigidBodyComponent>(vec2(20, 10));
+    entity.remove_component<TransformComponent>();
 }
 
 void Game::run()

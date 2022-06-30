@@ -10,7 +10,7 @@ Entity Registry::create_entity()
     {
         entity_component_signatures.resize(id + 1);
     }
-    auto entity{Entity{id}};
+    auto entity{Entity{id, this}};
     entities_to_add.insert(entity);
 
     return entity;

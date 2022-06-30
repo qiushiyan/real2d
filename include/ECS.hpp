@@ -19,7 +19,7 @@ class IPool
 };
 
 template <typename T>
-class Pool : IPool
+class Pool : public IPool
 {
 private:
     std::vector<T> data;
@@ -54,7 +54,7 @@ public:
     {
         data.push_back(element);
     };
-    void set(std::uint8_t, T element)
+    void set(std::uint8_t index, T element)
     {
         data[index] = element;
     };
@@ -101,8 +101,24 @@ public:
     TransformComponent(
         glm::vec2 position = glm::vec2{2, 0},
         glm::vec2 scale = glm::vec2{1, 1},
-        double rotation = 0) : position(position),
-                               scale(scale), rotation(rotation){};
+        double rotation = 0)
+    {
+        this->position = position;
+        this->scale = scale;
+        this->rotation = rotation;
+    };
+};
+
+class RigidBodyComponent
+{
+private:
+    glm::vec2 velocity;
+
+public:
+    RigidBodyComponent(glm::vec2 velocity = glm::vec2{0, 0})
+    {
+        this->velocity = velocity;
+    };
 };
 
 // ============================================================
@@ -167,21 +183,75 @@ public:
 
     // component management for a specific entity
     template <typename TComponent, typename... TArgs>
-    void add_component(Entity entity, TArgs &&...);
+    void add_component(Entity entity, TArgs &&...args)
+    {
+        const auto entity_id = entity.id();
+        const auto component_id = Component<TComponent>::id();
+
+        if (component_id > component_pools.size())
+        {
+            component_pools.resize(component_id + 1, nullptr);
+        }
+
+        if (!component_pools[component_id])
+        {
+            std::shared_ptr<Pool<TComponent>> new_component_pool_ptr(new Pool<TComponent>());
+            component_pools[component_id] = new_component_pool_ptr;
+        }
+
+        auto component_pool_ptr = std::static_pointer_cast<Pool<TComponent>>(component_pools[component_id]);
+
+        if (entity_id > component_pool_ptr->size())
+        {
+            component_pool_ptr->resize(num_entities);
+        }
+
+        // create new component
+        TComponent new_component(std::forward<TArgs>(args)...);
+        // add component to the pool, use entity id as index
+        component_pool_ptr->set(entity_id, new_component);
+        // set entity signature
+        entity_component_signatures[entity_id].set(component_id);
+    };
     template <typename TComponent>
-    void remove_component(Entity entity);
+    void remove_component(Entity entity)
+    {
+        const auto entity_id = entity.id();
+        const auto component_id = Component<TComponent>::id();
+        entity_component_signatures[entity_id].set(component_id, false);
+    };
     template <typename TComponent>
-    bool has_component(Entity entity) const;
+    bool has_component(Entity entity) const
+    {
+        const auto entity_id = entity.id();
+        const auto component_id = Component<TComponent>::id();
+        return entity_component_signatures[entity_id].test(component_id);
+    };
 
     // system management
     template <typename TSystem, typename... TArgs>
-    void add_system(TArgs &&...);
+    void add_system(TArgs &&...args)
+    {
+        std::shared_ptr<TSystem> new_system_ptr = std::make_shared<TSystem>(std::forward<TArgs>(args)...);
+        systems.insert(std::make_pair(std::type_index(typeid(TSystem)), new_system_ptr));
+    };
     template <typename TSystem>
-    void remove_system();
+    void remove_system()
+    {
+        auto it = systems.find(std::type_index(typeid(TSystem)));
+        systems.erase(it);
+    };
     template <typename TSystem>
-    bool has_system() const;
+    bool has_system() const
+    {
+        return systems.find(std::type_index(typeid(TSystem))) != systems.end() ? true : false;
+    };
     template <typename TSystem>
-    TSystem &get_system() const;
+    TSystem &get_system() const
+    {
+        auto it = systems.find(std::type_index(typeid(TSystem)));
+        return *(std::static_pointer_cast<TSystem>(it->second));
+    };
 
     // check for entity component signature and add the entity to all systems that match the component
     void add_entity_to_systems(Entity entity);

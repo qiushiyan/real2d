@@ -17,7 +17,7 @@ add_subdirectory(src/lib/logger)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
-add_executable(main ${SOURCES})
+add_executable(main ${SOURCES} src/ecs/Registry.cpp)
 target_include_directories(main PRIVATE ${LUA_INCLUDE_DIR})
 target_link_libraries(main PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
 target_link_libraries(main PRIVATE SDL2::SDL2_image)

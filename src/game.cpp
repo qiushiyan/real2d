@@ -7,7 +7,9 @@
 #include <exception>
 #include <stdexcept>
 #include <memory>
+#include <iostream>
 using namespace std::string_literals;
+using glm::vec2;
 
 Game::Game()
 {
@@ -47,6 +49,13 @@ void Game::init()
     running = true;
 }
 
+void Game::setup()
+{
+    auto entity = registry->create_entity();
+    registry->add_component<TransformComponent>(entity, vec2(0.0, 0.0), vec2(0.0, 0.0), 0.0);
+    registry->add_component<RigidBodyComponent>(entity, vec2(0.0, 0.0));
+}
+
 void Game::run()
 {
     while (running)
@@ -55,14 +64,6 @@ void Game::run()
         update();
         render();
     }
-}
-
-void Game::setup()
-{
-    auto entity = registry->create_entity();
-    registry->add_component<TransformComponent>(entity, glm::vec2(0.0, 0.0), glm::vec2(0.0, 0.0), 1);
-
-    // auto entity{Registry::create_entity()};
 }
 
 void Game::destroy()
@@ -98,7 +99,7 @@ void Game::update()
     auto current_ticks = SDL_GetTicks();
     auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
     // delta time
-    float dt = (current_ticks - cum_ticks) / 1000.0f;
+    // float dt = (current_ticks - cum_ticks) / 1000.0f;
 
     if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
     {

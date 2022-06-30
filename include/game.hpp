@@ -1,9 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <SDL2/SDL.h>
-#include "constants.hpp"
 #include "ECS.hpp"
+#include "constants.hpp"
+#include <SDL2/SDL.h>
 
 class Game
 {

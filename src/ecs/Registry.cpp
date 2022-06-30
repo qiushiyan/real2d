@@ -1,5 +1,4 @@
 #include "ECS.hpp"
-#include "Logger.hpp"
 #include <string>
 #include <memory>
 using glm::vec2;
@@ -12,7 +11,6 @@ Entity Registry::create_entity()
         entity_component_signatures.resize(id + 1);
     }
     auto entity{Entity{id}};
-    Logger::info("Created entity with id: " + std::to_string(id));
     entities_to_add.insert(entity);
 
     return entity;

@@ -8,9 +8,9 @@ namespace constants
 {
     inline constexpr std::uint16_t windowWidth{1200};
     inline constexpr std::uint16_t windowHeight{800};
-    inline constexpr std::uint8_t FPS{60};
-    inline constexpr std::uint8_t TICKS_PER_FRAME{1000 / FPS};
-    inline constexpr std::uint8_t MAX_COMPONENTS{32};
+    inline constexpr int FPS{60};
+    inline constexpr int TICKS_PER_FRAME{1000 / FPS};
+    inline constexpr int MAX_COMPONENTS{32};
     using Signature = std::bitset<MAX_COMPONENTS>;
 
 }

@@ -7,6 +7,7 @@
 #include <set>
 #include <glm/glm.hpp>
 #include <memory>
+#include <iostream>
 
 using constants::Signature;
 
@@ -25,7 +26,7 @@ private:
     std::vector<T> data;
 
 public:
-    Pool(std::uint8_t n = 100)
+    Pool(int n = 100)
     {
         data.resize(n);
     };
@@ -38,7 +39,7 @@ public:
     {
         return data.empty();
     };
-    bool size() const
+    std::size_t size() const
     {
         return data.size();
     };
@@ -46,7 +47,7 @@ public:
     {
         data.clear();
     };
-    void resize(std::uint8_t n)
+    void resize(int n)
     {
         data.resize(n);
     };
@@ -54,15 +55,15 @@ public:
     {
         data.push_back(element);
     };
-    void set(std::uint8_t index, T element)
+    void set(int index, T element)
     {
         data[index] = element;
     };
-    T &get(std::uint8_t index) const
+    T &get(int index) const
     {
         return static_cast<T &>(data[index]);
     };
-    T &operator[](std::uint8_t index) const
+    T &operator[](int index) const
     {
         return data[index];
     };
@@ -75,7 +76,7 @@ public:
 class IComponent
 {
 protected:
-    static std::uint8_t _id;
+    static int _id;
 };
 
 template <typename T>
@@ -85,7 +86,7 @@ public:
     // returns unique id per component type
     static int id()
     {
-        const static std::uint8_t component_id = _id++;
+        const static int component_id = _id++;
         return component_id;
     }
 };
@@ -127,13 +128,13 @@ public:
 class Entity
 {
 private:
-    std::uint8_t _id{0};
+    int _id{0};
     Signature component_signature;
 
 public:
-    Entity(std::uint8_t id) : _id(id){};
-    void id(const std::uint8_t new_id);
-    std::uint8_t id() const;
+    Entity(int id) : _id(id){};
+    void id(const int new_id);
+    int id() const;
     bool operator==(const Entity &other) const;
     bool operator!=(const Entity &other) const;
     bool operator>(const Entity &other) const;
@@ -168,12 +169,12 @@ void System::require_component()
 class Registry
 {
 private:
-    std::uint8_t num_entities{0};
+    int num_entities{0};
     std::set<Entity> entities_to_add;
     std::set<Entity> entities_to_kill;
 
-    std::vector<std::shared_ptr<IPool>> component_pools;
-    std::vector<Signature> entity_component_signatures;
+    std::vector<std::shared_ptr<IPool>> component_pools = std::vector<std::shared_ptr<IPool>>(10);
+    std::vector<Signature> entity_component_signatures = std::vector<Signature>(100);
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
 
 public:
@@ -183,11 +184,10 @@ public:
 
     // component management for a specific entity
     template <typename TComponent, typename... TArgs>
-    void add_component(Entity entity, TArgs &&...args)
+    void add_component(Entity &entity, TArgs &&...args)
     {
         const auto entity_id = entity.id();
         const auto component_id = Component<TComponent>::id();
-
         if (component_id > component_pools.size())
         {
             component_pools.resize(component_id + 1, nullptr);
@@ -195,7 +195,7 @@ public:
 
         if (!component_pools[component_id])
         {
-            std::shared_ptr<Pool<TComponent>> new_component_pool_ptr(new Pool<TComponent>());
+            auto new_component_pool_ptr = std::make_shared<Pool<TComponent>>();
             component_pools[component_id] = new_component_pool_ptr;
         }
 
@@ -208,24 +208,26 @@ public:
 
         // create new component
         TComponent new_component(std::forward<TArgs>(args)...);
+
         // add component to the pool, use entity id as index
         component_pool_ptr->set(entity_id, new_component);
+
         // set entity signature
-        entity_component_signatures[entity_id].set(component_id);
+        entity_component_signatures.at(entity_id).set(component_id);
     };
     template <typename TComponent>
     void remove_component(Entity entity)
     {
         const auto entity_id = entity.id();
         const auto component_id = Component<TComponent>::id();
-        entity_component_signatures[entity_id].set(component_id, false);
+        entity_component_signatures.at(entity_id).set(component_id);
     };
     template <typename TComponent>
     bool has_component(Entity entity) const
     {
         const auto entity_id = entity.id();
         const auto component_id = Component<TComponent>::id();
-        return entity_component_signatures[entity_id].test(component_id);
+        return entity_component_signatures.at(entity_id).test(component_id);
     };
 
     // system management

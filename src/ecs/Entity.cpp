@@ -1,11 +1,11 @@
 #include "ECS.hpp"
 
-void Entity::id(const std::uint8_t new_id)
+void Entity::id(const int new_id)
 {
     _id = new_id;
 }
 
-std::uint8_t Entity::id() const
+int Entity::id() const
 {
     return _id;
 }

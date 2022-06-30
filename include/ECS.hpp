@@ -9,8 +9,10 @@
 #include <memory>
 #include <iostream>
 #include <Logger.hpp>
+#include <SDL2/SDL.h>
 
 using constants::Signature;
+using glm::vec2;
 
 // ============================================================
 // Pool
@@ -60,7 +62,7 @@ public:
     {
         data[index] = element;
     };
-    T &get(int index) const
+    T &get(int index)
     {
         return static_cast<T &>(data[index]);
     };
@@ -94,33 +96,27 @@ public:
 
 class TransformComponent
 {
-private:
-    glm::vec2 position;
-    glm::vec2 scale;
-    double rotation;
-
 public:
-    TransformComponent(
-        glm::vec2 position = glm::vec2{2, 0},
-        glm::vec2 scale = glm::vec2{1, 1},
-        double rotation = 0)
-    {
-        this->position = position;
-        this->scale = scale;
-        this->rotation = rotation;
-    };
+    vec2 position;
+    vec2 scale;
+    double rotation;
+    TransformComponent(vec2 position = vec2{10, 10}, vec2 scale = vec2{1, 1}, double rotation = 0);
 };
 
 class RigidBodyComponent
 {
-private:
-    glm::vec2 velocity;
 
 public:
-    RigidBodyComponent(glm::vec2 velocity = glm::vec2{0, 0})
-    {
-        this->velocity = velocity;
-    };
+    vec2 velocity;
+    RigidBodyComponent(vec2 velocity = vec2{0, 0});
+};
+
+class SpriteComponent
+{
+public:
+    int width;
+    int height;
+    SpriteComponent(int width = 50, int height = 50);
 };
 
 // ============================================================
@@ -152,6 +148,9 @@ public:
     TComponent &get_component() const;
 };
 
+// ============================================================
+// System
+// ============================================================
 class System
 {
 private:
@@ -171,12 +170,23 @@ public:
     void require_component();
 };
 
-template <typename TComponent>
-void System::require_component()
+class MovementSystem : public System
 {
-    component_signature.set(Component<TComponent>::id());
-}
+public:
+    MovementSystem();
+    void update(const float dt);
+};
 
+class RenderSystem : public System
+{
+public:
+    RenderSystem();
+    void update(SDL_Renderer *renderer);
+};
+
+// ============================================================
+// Registry
+// ============================================================
 class Registry
 {
 private:
@@ -308,6 +318,13 @@ TComponent &Registry::get_component(Entity entity) const
 
     return component_pool->get(entity_id);
 };
+
+// System
+template <typename TComponent>
+void System::require_component()
+{
+    component_signature.set(Component<TComponent>::id());
+}
 
 // system management
 template <typename TSystem, typename... TArgs>

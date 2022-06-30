@@ -51,10 +51,12 @@ void Game::init()
 
 void Game::setup()
 {
+    registry->add_system<MovementSystem>();
+    registry->add_system<RenderSystem>();
     auto entity = registry->create_entity();
     entity.add_component<TransformComponent>(vec2(10, 20), vec2(0.0, 0.0), 0.0);
     entity.add_component<RigidBodyComponent>(vec2(20, 10));
-    entity.remove_component<TransformComponent>();
+    entity.add_component<SpriteComponent>(100, 100);
 }
 
 void Game::run()
@@ -96,11 +98,11 @@ void Game::process_input()
 
 void Game::update()
 {
-
     auto current_ticks = SDL_GetTicks();
     auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
     // delta time
-    // float dt = (current_ticks - cum_ticks) / 1000.0f;
+    float dt = (current_ticks - cum_ticks) / 1000.0f;
+    registry->get_system<MovementSystem>().update(dt);
 
     if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
     {
@@ -109,9 +111,6 @@ void Game::update()
 
     cum_ticks = SDL_GetTicks();
     registry->update();
-    // MovementSystem::update(dt);
-    // CollisionSystem::update(dt);
-    // DamageSystem::update(dt);
 }
 
 void Game::render()
@@ -129,5 +128,6 @@ void Game::render()
     //     32};
     // SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
     // SDL_DestroyTexture(texture);
+    registry->get_system<RenderSystem>().update(renderer);
     SDL_RenderPresent(renderer);
 }

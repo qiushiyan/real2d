@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "ECS.hpp"
+#include "Store.hpp"
 #include "constants.hpp"
 #include <SDL2/SDL.h>
 
@@ -13,6 +14,7 @@ private:
     SDL_Window *window;
     SDL_Renderer *renderer;
     std::unique_ptr<Registry> registry;
+    std::unique_ptr<AssetStore> asset_store;
 
 public:
     Game();

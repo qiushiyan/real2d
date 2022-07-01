@@ -7,13 +7,13 @@
 #include <exception>
 #include <stdexcept>
 #include <memory>
-#include <iostream>
 using namespace std::string_literals;
 using glm::vec2;
 
 Game::Game()
 {
     registry = std::make_unique<Registry>();
+    asset_store = std::make_unique<AssetStore>();
 }
 
 void Game::init()
@@ -53,10 +53,11 @@ void Game::setup()
 {
     registry->add_system<MovementSystem>();
     registry->add_system<RenderSystem>();
+    asset_store->add_texture(renderer, "tree", "../assets/images/tree.png");
     auto entity = registry->create_entity();
-    entity.add_component<TransformComponent>(vec2(10, 20), vec2(0.0, 0.0), 0.0);
-    entity.add_component<RigidBodyComponent>(vec2(20, 10));
-    entity.add_component<SpriteComponent>(100, 100);
+    entity.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
+    entity.add_component<RigidBodyComponent>(vec2(30, 10));
+    entity.add_component<SpriteComponent>("tree", 32, 32);
 }
 
 void Game::run()
@@ -128,6 +129,6 @@ void Game::render()
     //     32};
     // SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
     // SDL_DestroyTexture(texture);
-    registry->get_system<RenderSystem>().update(renderer);
+    registry->get_system<RenderSystem>().update(renderer, asset_store);
     SDL_RenderPresent(renderer);
 }

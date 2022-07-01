@@ -10,9 +10,11 @@
 #include <iostream>
 #include <Logger.hpp>
 #include <SDL2/SDL.h>
+#include "Store.hpp"
 
 using constants::Signature;
 using glm::vec2;
+using namespace std::string_literals;
 
 // ============================================================
 // Pool
@@ -114,9 +116,11 @@ public:
 class SpriteComponent
 {
 public:
+    std::string asset_name;
     int width;
     int height;
-    SpriteComponent(int width = 50, int height = 50);
+    SDL_Rect src_rect;
+    SpriteComponent(std::string asset_name = ""s, int width = 50, int height = 50, int src_rect_x = 0, int src_rect_y = 0);
 };
 
 // ============================================================
@@ -181,7 +185,7 @@ class RenderSystem : public System
 {
 public:
     RenderSystem();
-    void update(SDL_Renderer *renderer);
+    void update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store);
 };
 
 // ============================================================

@@ -1,6 +1,4 @@
 #include "ECS.hpp"
-#include <string>
-#include <memory>
 using glm::vec2;
 
 Entity Registry::create_entity()

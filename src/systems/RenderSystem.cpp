@@ -1,5 +1,6 @@
 #include "ECS.hpp"
 #include "Store.hpp"
+#include <algorithm>
 
 RenderSystem::RenderSystem()
 {
@@ -7,8 +8,27 @@ RenderSystem::RenderSystem()
     require_component<SpriteComponent>();
 }
 
+class RenderableEntity
+{
+public:
+    RenderableEntity(const TransformComponent &transform, const SpriteComponent &sprite) : transform_component(transform), sprite_component(sprite){};
+    TransformComponent transform_component;
+    SpriteComponent sprite_component;
+};
+
 void RenderSystem::update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store)
 {
+    // std::vector<RenderableEntity> renderable_entities;
+    // for (const auto &entity : entities())
+    // {
+    //     renderable_entities.emplace_back(entity.get_component<TransformComponent>(),
+    //                                      entity.get_component<SpriteComponent>());
+    // }
+
+    // std::sort(renderable_entities.begin(), renderable_entities.end(),
+    //           [](const RenderableEntity &a, const RenderableEntity &b)
+    //           { return a.sprite_component.z_index < b.sprite_component.z_index; });
+
     for (const auto &entity : entities())
     {
         auto &transform = entity.get_component<TransformComponent>();

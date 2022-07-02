@@ -21,6 +21,7 @@ public:
 
     void init();
     void setup();
+    void load_level(int level);
     void run();
     void destroy();
     void process_input();

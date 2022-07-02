@@ -52,6 +52,7 @@
     "memory": "cpp",
     "ostream": "cpp",
     "iostream": "cpp",
-    "istream": "cpp"
+    "istream": "cpp",
+    "fstream": "cpp"
   }
 }

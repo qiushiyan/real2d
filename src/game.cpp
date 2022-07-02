@@ -7,6 +7,7 @@
 #include <exception>
 #include <stdexcept>
 #include <memory>
+#include <fstream>
 using namespace std::string_literals;
 using glm::vec2;
 
@@ -49,15 +50,53 @@ void Game::init()
     running = true;
 }
 
-void Game::setup()
+void Game::load_level(int level)
 {
+    using namespace constants;
+    // add systems
     registry->add_system<MovementSystem>();
     registry->add_system<RenderSystem>();
-    asset_store->add_texture(renderer, "tree", "../assets/images/tree.png");
+
+    // add textures
+    asset_store->add_texture(renderer, "tree-image", "../assets/images/tree.png");
+    asset_store->add_texture(renderer, "tilemap-image", "../assets/tilemaps/jungle.png");
+
     auto entity = registry->create_entity();
     entity.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
     entity.add_component<RigidBodyComponent>(vec2(30, 10));
-    entity.add_component<SpriteComponent>("tree", 32, 32);
+    entity.add_component<SpriteComponent>("tree-image", tile_size, tile_size, 1);
+
+    // load tilemap and create entities
+    std::fstream map_file;
+    map_file.open("./assets/tilemaps/jungle.map");
+
+    if (!map_file.is_open())
+    {
+        Logger::error("Failed to open map file."s);
+    }
+
+    for (int y = 0; y < map_rows; y++)
+    {
+        for (int x = 0; x < map_cols; x++)
+        {
+            char ch;
+            map_file.get(ch);
+            int src_rect_y = std::atoi(&ch) * tile_size;
+            map_file.get(ch);
+            int src_rect_x = std::atoi(&ch) * tile_size;
+            map_file.ignore();
+
+            Entity tile = registry->create_entity();
+            tile.add_component<TransformComponent>(vec2(x * (tile_scale * tile_size), y * (tile_scale * tile_size)), vec2(tile_scale, tile_scale), 0.0);
+            tile.add_component<SpriteComponent>("tilemap-image", tile_size, tile_size, 0, src_rect_x, src_rect_y);
+        }
+    }
+    map_file.close();
+}
+
+void Game::setup()
+{
+    load_level(1);
 }
 
 void Game::run()

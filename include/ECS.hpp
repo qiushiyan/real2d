@@ -31,7 +31,7 @@ private:
     std::vector<T> data;
 
 public:
-    Pool(int n = 100)
+    Pool(int n = 1000)
     {
         data.resize(n);
     };
@@ -119,8 +119,9 @@ public:
     std::string asset_name;
     int width;
     int height;
+    int z_index;
     SDL_Rect src_rect;
-    SpriteComponent(std::string asset_name = ""s, int width = 50, int height = 50, int src_rect_x = 0, int src_rect_y = 0);
+    SpriteComponent(std::string asset_name = ""s, int width = 50, int height = 50, int z_index = 0, int src_rect_x = 0, int src_rect_y = 0);
 };
 
 // ============================================================
@@ -147,7 +148,7 @@ public:
     template <typename TComponent>
     void remove_component();
     template <typename TComponent>
-    bool &has_component() const;
+    bool has_component() const;
     template <typename TComponent>
     TComponent &get_component() const;
 };
@@ -194,12 +195,12 @@ public:
 class Registry
 {
 private:
-    int num_entities{0};
+    int num_entities;
     std::set<Entity> entities_to_add;
     std::set<Entity> entities_to_kill;
 
-    std::vector<std::shared_ptr<IPool>> component_pools = std::vector<std::shared_ptr<IPool>>(10);
-    std::vector<Signature> entity_component_signatures = std::vector<Signature>(100);
+    std::vector<std::shared_ptr<IPool>> component_pools = std::vector<std::shared_ptr<IPool>>(1000);
+    std::vector<Signature> entity_component_signatures = std::vector<Signature>(1000);
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
 
 public:
@@ -250,7 +251,7 @@ void Entity::remove_component()
 }
 
 template <typename TComponent>
-bool &Entity::has_component() const
+bool Entity::has_component() const
 {
     return registry->has_component<TComponent>(*this);
 }
@@ -294,7 +295,7 @@ void Registry::add_component(Entity &entity, TArgs &&...args)
     // set entity signature
     entity_component_signatures.at(entity_id).set(component_id);
 
-    Logger::info("added component " + std::to_string(component_id) + " to entity " + std::to_string(entity_id));
+    // Logger::info("added component " + std::to_string(component_id) + " to entity " + std::to_string(entity_id));
 };
 template <typename TComponent>
 void Registry::remove_component(Entity entity)
@@ -303,7 +304,7 @@ void Registry::remove_component(Entity entity)
     const auto component_id = Component<TComponent>::id();
     entity_component_signatures.at(entity_id).set(component_id, false);
 
-    Logger::info("remove component " + std::to_string(component_id) + " from entity " + std::to_string(entity_id));
+    // Logger::info("remove component " + std::to_string(component_id) + " from entity " + std::to_string(entity_id));
 };
 template <typename TComponent>
 bool Registry::has_component(Entity entity) const

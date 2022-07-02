@@ -160,13 +160,15 @@ class System
 {
 private:
     Signature component_signature;
+
+protected:
     std::vector<Entity> _entities;
 
 public:
     System() = default;
-    ~System() = default;
+    virtual ~System() = default;
 
-    void add_entity(Entity entity);
+    virtual void add_entity(Entity entity);
     void remove_entity(Entity entity);
     std::vector<Entity> entities() const;
     const Signature &get_component_signature() const;
@@ -186,6 +188,7 @@ class RenderSystem : public System
 {
 public:
     RenderSystem();
+    void add_entity(Entity entity) override final;
     void update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store);
 };
 

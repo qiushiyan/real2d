@@ -16,6 +16,15 @@ public:
     SpriteComponent sprite_component;
 };
 
+// override System::add_entity and sort by z-index
+void RenderSystem::add_entity(Entity entity)
+{
+    auto it = std::upper_bound(_entities.begin(), _entities.end(), entity, [](const Entity &entity, const Entity &other)
+                               { return entity.get_component<SpriteComponent>().z_index < other.get_component<SpriteComponent>().z_index; });
+
+    _entities.insert(it, entity);
+}
+
 void RenderSystem::update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store)
 {
     // std::vector<RenderableEntity> renderable_entities;

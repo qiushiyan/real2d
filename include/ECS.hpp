@@ -107,7 +107,6 @@ public:
 
 class RigidBodyComponent
 {
-
 public:
     vec2 velocity;
     RigidBodyComponent(vec2 velocity = vec2{0, 0});
@@ -122,6 +121,26 @@ public:
     int z_index;
     SDL_Rect src_rect;
     SpriteComponent(std::string asset_name = ""s, int width = 50, int height = 50, int z_index = 0, int src_rect_x = 0, int src_rect_y = 0);
+};
+
+class AnimationComponent
+{
+public:
+    int current_frame;
+    int num_frames; // number of frames in the animation
+    int frame_rate; // how many frame per second
+    bool should_loop;
+    int start_time; // current ticks
+    AnimationComponent(int num_frames = 1, int frame_rate = 1, bool should_loop = true);
+};
+
+class BoxColliderComponent
+{
+public:
+    int width;
+    int height;
+    vec2 offset;
+    BoxColliderComponent(int width = 0, int height = 0, vec2 offset = vec2(0));
 };
 
 // ============================================================
@@ -190,6 +209,28 @@ public:
     RenderSystem();
     void add_entity(Entity entity) override final;
     void update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store);
+};
+
+class AnimationSystem : public System
+{
+public:
+    AnimationSystem();
+    void update();
+};
+
+class CollisionSystem : public System
+{
+public:
+    CollisionSystem();
+    bool collide(const Entity &entity, const Entity &other);
+    void update();
+};
+
+class RenderCollisionSystem : public System
+{
+public:
+    RenderCollisionSystem();
+    void update(SDL_Renderer *renderer);
 };
 
 // ============================================================

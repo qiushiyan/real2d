@@ -56,15 +56,36 @@ void Game::load_level(int level)
     // add systems
     registry->add_system<MovementSystem>();
     registry->add_system<RenderSystem>();
+    registry->add_system<AnimationSystem>();
+    registry->add_system<CollisionSystem>();
+    registry->add_system<RenderCollisionSystem>();
 
     // add textures
     asset_store->add_texture(renderer, "tree-image", "../assets/images/tree.png");
     asset_store->add_texture(renderer, "tilemap-image", "../assets/tilemaps/jungle.png");
+    asset_store->add_texture(renderer, "chopper-image", "../assets/images/chopper.png");
+    asset_store->add_texture(renderer, "tank-image-left", "../assets/images/tank-tiger-left.png");
+    asset_store->add_texture(renderer, "tank-image-right", "../assets/images/tank-tiger-right.png");
 
-    auto entity = registry->create_entity();
-    entity.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
-    entity.add_component<RigidBodyComponent>(vec2(30, 10));
-    entity.add_component<SpriteComponent>("tree-image", tile_size, tile_size, 1);
+    // test animation
+    auto chopper = registry->create_entity();
+    chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
+    chopper.add_component<RigidBodyComponent>(vec2(30, 10));
+    chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2);
+    chopper.add_component<AnimationComponent>(2, 12, true);
+
+    // test collision
+    auto tank1 = registry->create_entity();
+    tank1.add_component<TransformComponent>(vec2(30, 30), vec2(1, 1), 0.0);
+    tank1.add_component<RigidBodyComponent>(vec2(50, 0));
+    tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size, 2);
+    tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
+
+    auto tank2 = registry->create_entity();
+    tank2.add_component<TransformComponent>(vec2(600, 30), vec2(1, 1), 0.0);
+    tank2.add_component<RigidBodyComponent>(vec2(-50, 0));
+    tank2.add_component<SpriteComponent>("tank-image-left", tile_size, tile_size, 2);
+    tank2.add_component<BoxColliderComponent>(tile_size, tile_size, vec2(5));
 
     // load tilemap and create entities
     std::fstream map_file;
@@ -127,6 +148,10 @@ void Game::process_input()
             running = false;
             break;
         case SDL_KEYDOWN:
+            if (sdlEvent.key.keysym.sym == SDLK_d)
+            {
+                debug = !debug;
+            }
             if (sdlEvent.key.keysym.sym == SDLK_ESCAPE)
             {
                 running = false;
@@ -142,7 +167,10 @@ void Game::update()
     auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
     // delta time
     float dt = (current_ticks - cum_ticks) / 1000.0f;
+    registry->update();
     registry->get_system<MovementSystem>().update(dt);
+    registry->get_system<AnimationSystem>().update();
+    registry->get_system<CollisionSystem>().update();
 
     if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
     {
@@ -150,24 +178,16 @@ void Game::update()
     }
 
     cum_ticks = SDL_GetTicks();
-    registry->update();
 }
 
 void Game::render()
 {
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
-    // auto surface = IMG_Load("../assets/images/tank-tiger-right.png");
-    // auto texture = SDL_CreateTextureFromSurface(renderer, surface);
-    // SDL_FreeSurface(surface);
-
-    // auto dest_rect = SDL_Rect{
-    //     static_cast<int>(playerPosition.x),
-    //     static_cast<int>(playerPosition.y),
-    //     32,
-    //     32};
-    // SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
-    // SDL_DestroyTexture(texture);
     registry->get_system<RenderSystem>().update(renderer, asset_store);
+    if (debug)
+    {
+        registry->get_system<RenderCollisionSystem>().update(renderer);
+    }
     SDL_RenderPresent(renderer);
 }

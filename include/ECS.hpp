@@ -157,10 +157,47 @@ public:
     KeyboardControlComponent(vec2 up_velocity = vec2(0), vec2 right_velocity = vec2(0), vec2 down_velocity = vec2(0), vec2 left_velocity = vec2(0));
 };
 
+class MouseControlComponent
+{
+public:
+    MouseControlComponent();
+};
+
 class CameraFollowComponent
 {
 public:
     CameraFollowComponent();
+};
+
+class ProjectileEmitterComponent
+{
+public:
+    vec2 velocity;
+    int freq;     // emitting frequency, ticks per emission
+    int duration; // duration of the projectile
+    bool is_friendly;
+    int damage; // damage of the projectile, in percentage
+    int last_emission_time;
+
+    ProjectileEmitterComponent(vec2 velocity = vec2(0), int freq = 500, int duration = 5000, bool is_friendly = true, int damage = 0);
+};
+
+class ProjectileComponent
+{
+public:
+    int duration;
+    bool is_friendly;
+    int damage;
+    int start_time;
+
+    ProjectileComponent(int duration = 5000, bool is_friendly = true, int damage = 0);
+};
+
+class HealthComponent
+{
+public:
+    int health;
+    HealthComponent(int health = 100);
 };
 
 // ============================================================
@@ -170,10 +207,10 @@ class Entity
 {
 private:
     int _id{0};
-    class Registry *registry;
     Signature component_signature;
 
 public:
+    class Registry *registry;
     Entity(int id, Registry *registry) : _id(id), registry(registry){};
     void id(const int new_id);
     int id() const;
@@ -210,6 +247,13 @@ class KeyPressedEvent : public Event
 public:
     SDL_Keycode key;
     KeyPressedEvent(SDL_Keycode key);
+};
+
+class MouseClickedEvent : public Event
+{
+public:
+    int button;
+    MouseClickedEvent(int button);
 };
 
 class IEventCallback
@@ -324,7 +368,7 @@ class RenderColliderSystem : public System
 {
 public:
     RenderColliderSystem();
-    void update(SDL_Renderer *renderer);
+    void update(SDL_Renderer *renderer, SDL_Rect &camera);
 };
 
 class DamageSystem : public System
@@ -345,11 +389,39 @@ public:
     void update();
 };
 
+class MouseControlSystem : public System
+{
+public:
+    MouseControlSystem();
+    void subscribe_events(std::shared_ptr<EventBus> event_bus);
+    void on_mouse_clicked(MouseClickedEvent &e);
+    void update();
+};
+
 class CameraMovementSystem : public System
 {
 public:
     CameraMovementSystem();
     void update(SDL_Rect &camera);
+};
+
+class Registry;
+class ProjectileEmitSystem : public System
+{
+public:
+    ProjectileEmitSystem();
+    void on_key_pressed(KeyPressedEvent &e);
+    void on_mouse_clicked(MouseClickedEvent &e);
+    void subscribe_events(std::shared_ptr<EventBus> event_bus);
+    void emit_from(const Entity &entity, bool const_direction);
+    void update(std::shared_ptr<Registry> registry);
+};
+
+class ProjectileLifecycleSystem : public System
+{
+public:
+    ProjectileLifecycleSystem();
+    void update();
 };
 
 // ============================================================

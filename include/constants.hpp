@@ -12,7 +12,7 @@ namespace constants
     inline constexpr int TICKS_PER_FRAME{1000 / FPS};
     inline constexpr int MAX_COMPONENTS{32};
     inline constexpr int tile_size{32};
-    inline constexpr double tile_scale{1.5};
+    inline constexpr double tile_scale{2};
     inline constexpr int map_rows{20};
     inline constexpr int map_cols{25};
     inline constexpr double map_width{map_cols * tile_size * tile_scale};

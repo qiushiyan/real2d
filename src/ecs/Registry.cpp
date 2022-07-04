@@ -4,10 +4,9 @@ using glm::vec2;
 Entity Registry::create_entity()
 {
     int id;
-    num_entities += 1;
     if (free_ids.empty())
     {
-        id = num_entities;
+        id = num_entities++;
         if (id > entity_component_signatures.size())
         {
             entity_component_signatures.resize(id + 1);
@@ -16,6 +15,7 @@ Entity Registry::create_entity()
     else
     {
         id = free_ids.front();
+        free_ids.pop_front();
     }
 
     auto entity{Entity{id, this}};
@@ -51,7 +51,7 @@ void Registry::add_entity_to_systems(Entity entity)
 
 void Registry::remove_entity_from_systems(Entity entity)
 {
-    for (const auto &system_pair : systems)
+    for (auto &system_pair : systems)
     {
         system_pair.second->remove_entity(entity);
     }
@@ -63,6 +63,7 @@ void Registry::update()
     {
         add_entity_to_systems(entity);
     }
+    entities_to_add.clear();
 
     for (auto &entity : entities_to_kill)
     {
@@ -73,5 +74,5 @@ void Registry::update()
         free_ids.push_back(entity_id);
     }
 
-    entities_to_add.clear();
+    entities_to_kill.clear();
 }

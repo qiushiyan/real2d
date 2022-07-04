@@ -13,7 +13,7 @@ using glm::vec2;
 
 Game::Game()
 {
-    registry = std::make_unique<Registry>();
+    registry = std::make_shared<Registry>();
     asset_store = std::make_unique<AssetStore>();
     event_bus = std::make_shared<EventBus>();
 }
@@ -70,24 +70,30 @@ void Game::load_level(int level)
     registry->add_system<DamageSystem>();
     registry->add_system<KeyboardControlSystem>();
     registry->add_system<CameraMovementSystem>();
+    registry->add_system<ProjectileEmitSystem>();
+    registry->add_system<ProjectileLifecycleSystem>();
 
     registry->get_system<DamageSystem>().subscribe_events(event_bus);
     registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
+    registry->get_system<ProjectileEmitSystem>().subscribe_events(event_bus);
     // add textures
     asset_store->add_texture(renderer, "radar-image", "../assets/images/radar.png");
     asset_store->add_texture(renderer, "tilemap-image", "../assets/tilemaps/jungle.png");
     asset_store->add_texture(renderer, "chopper-image", "../assets/images/chopper-spritesheet.png");
     asset_store->add_texture(renderer, "tank-image-left", "../assets/images/tank-tiger-left.png");
     asset_store->add_texture(renderer, "tank-image-right", "../assets/images/tank-tiger-right.png");
+    asset_store->add_texture(renderer, "bullet-image", "../assets/images/bullet.png");
 
     // test animation
     auto chopper = registry->create_entity();
     chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
-    chopper.add_component<RigidBodyComponent>(vec2(100, 10));
+    chopper.add_component<RigidBodyComponent>(vec2(100, 0));
     chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2, false, 0, tile_size);
     chopper.add_component<AnimationComponent>(2, 12, true);
     chopper.add_component<KeyboardControlComponent>(vec2(0, -100), vec2(100, 0), vec2(0, 100), vec2(-100, 0));
     chopper.add_component<CameraFollowComponent>();
+    chopper.add_component<HealthComponent>();
+    chopper.add_component<ProjectileEmitterComponent>(vec2(150, 150), 0, 5000);
 
     // test fixed entity
     auto radar = registry->create_entity();
@@ -97,16 +103,18 @@ void Game::load_level(int level)
 
     // test collision
     auto tank1 = registry->create_entity();
-    tank1.add_component<TransformComponent>(vec2(30, 30), vec2(1, 1), 0.0);
+    tank1.add_component<TransformComponent>(vec2(30, 100), vec2(1, 1), 0.0);
     tank1.add_component<RigidBodyComponent>(vec2(50, 0));
-    tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size, 2);
+    tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size, 3);
     tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
+    tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 500, 5000, false, 10);
+    tank1.add_component<HealthComponent>();
 
-    auto tank2 = registry->create_entity();
-    tank2.add_component<TransformComponent>(vec2(400, 30), vec2(1, 1), 0.0);
-    tank2.add_component<RigidBodyComponent>(vec2(-50, 0));
-    tank2.add_component<SpriteComponent>("tank-image-left", tile_size, tile_size, 2);
-    tank2.add_component<BoxColliderComponent>(tile_size, tile_size, vec2(5));
+    // auto tank2 = registry->create_entity();
+    // tank2.add_component<TransformComponent>(vec2(400, 30), vec2(1, 1), 0.0);
+    // tank2.add_component<RigidBodyComponent>(vec2(-50, 0));
+    // tank2.add_component<SpriteComponent>("tank-image-left", tile_size, tile_size, 2);
+    // tank2.add_component<BoxColliderComponent>(tile_size, tile_size, vec2(5));
 
     // load tilemap and create entities
     std::fstream map_file;
@@ -179,6 +187,11 @@ void Game::process_input()
                 running = false;
             }
             break;
+        case SDL_MOUSEBUTTONDOWN:
+            if (sdlEvent.button.button == SDL_BUTTON_LEFT)
+            {
+                event_bus->emit<MouseClickedEvent>(sdlEvent.button.button);
+            }
         }
     }
 }
@@ -197,6 +210,8 @@ void Game::update()
     registry->get_system<CollisionSystem>().update(event_bus);
     registry->get_system<DamageSystem>().update();
     registry->get_system<CameraMovementSystem>().update(camera);
+    registry->get_system<ProjectileEmitSystem>().update(registry);
+    registry->get_system<ProjectileLifecycleSystem>().update();
 
     if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
     {
@@ -213,7 +228,7 @@ void Game::render()
     registry->get_system<RenderSystem>().update(renderer, asset_store, camera);
     if (debug)
     {
-        registry->get_system<RenderColliderSystem>().update(renderer);
+        registry->get_system<RenderColliderSystem>().update(renderer, camera);
     }
     SDL_RenderPresent(renderer);
 }

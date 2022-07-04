@@ -6,7 +6,7 @@ RenderColliderSystem::RenderColliderSystem()
     require_component<BoxColliderComponent>();
 }
 
-void RenderColliderSystem::update(SDL_Renderer *renderer)
+void RenderColliderSystem::update(SDL_Renderer *renderer, SDL_Rect &camera)
 {
     for (const auto &entity : entities())
     {
@@ -14,8 +14,8 @@ void RenderColliderSystem::update(SDL_Renderer *renderer)
         const auto &box = entity.get_component<BoxColliderComponent>();
 
         SDL_Rect collider_rect = {
-            (int)(transform.position.x - box.offset.x),
-            (int)(transform.position.y - box.offset.y),
+            (int)(transform.position.x - box.offset.x - camera.x),
+            (int)(transform.position.y - box.offset.y - camera.y),
             (int)(box.width + 2 * box.offset.x),
             (int)(box.height + 2 * box.offset.y)};
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);

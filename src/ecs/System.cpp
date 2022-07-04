@@ -10,8 +10,8 @@ void System::add_entity(Entity entity)
 void System::remove_entity(Entity entity)
 {
     auto it = std::remove_if(_entities.begin(), _entities.end(),
-                             [entity](const Entity &e)
-                             { return e == entity; });
+                             [&entity](Entity &other)
+                             { return other == entity; });
 
     _entities.erase(it, _entities.end());
 }

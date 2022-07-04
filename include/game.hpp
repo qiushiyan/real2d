@@ -13,7 +13,7 @@ private:
     std::uint64_t cum_ticks{0};
     SDL_Window *window;
     SDL_Renderer *renderer;
-    std::unique_ptr<Registry> registry;
+    std::shared_ptr<Registry> registry;
     std::unique_ptr<AssetStore> asset_store;
     std::shared_ptr<EventBus> event_bus;
     SDL_Rect camera;

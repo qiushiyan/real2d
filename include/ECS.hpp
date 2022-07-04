@@ -122,8 +122,9 @@ public:
     int width;
     int height;
     int z_index;
+    bool is_fixed;
     SDL_Rect src_rect;
-    SpriteComponent(std::string asset_name = ""s, int width = 50, int height = 50, int z_index = 0, int src_rect_x = 0, int src_rect_y = 0);
+    SpriteComponent(std::string asset_name = ""s, int width = 32, int height = 32, int z_index = 0, bool is_fixed = false, int src_rect_x = 0, int src_rect_y = 0);
 };
 
 class AnimationComponent
@@ -144,6 +145,22 @@ public:
     int height;
     vec2 offset;
     BoxColliderComponent(int width = 0, int height = 0, vec2 offset = vec2(0));
+};
+
+class KeyboardControlComponent
+{
+public:
+    vec2 up_velocity;
+    vec2 right_velocity;
+    vec2 down_velocity;
+    vec2 left_velocity;
+    KeyboardControlComponent(vec2 up_velocity = vec2(0), vec2 right_velocity = vec2(0), vec2 down_velocity = vec2(0), vec2 left_velocity = vec2(0));
+};
+
+class CameraFollowComponent
+{
+public:
+    CameraFollowComponent();
 };
 
 // ============================================================
@@ -285,7 +302,7 @@ class RenderSystem : public System
 public:
     RenderSystem();
     void add_entity(Entity entity) override final;
-    void update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store);
+    void update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store, SDL_Rect &camera);
 };
 
 class AnimationSystem : public System
@@ -326,6 +343,13 @@ public:
     void subscribe_events(std::shared_ptr<EventBus> event_bus);
     void on_key_pressed(KeyPressedEvent &e);
     void update();
+};
+
+class CameraMovementSystem : public System
+{
+public:
+    CameraMovementSystem();
+    void update(SDL_Rect &camera);
 };
 
 // ============================================================

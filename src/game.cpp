@@ -20,6 +20,7 @@ Game::Game()
 
 void Game::init()
 {
+    using namespace constants;
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         Logger::error("SDL initialization failed."s);
@@ -29,7 +30,7 @@ void Game::init()
     SDL_DisplayMode displayMode;
     SDL_GetCurrentDisplayMode(0, &displayMode);
 
-    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_BORDERLESS);
+    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, SDL_WINDOW_BORDERLESS);
 
     if (!window)
     {
@@ -45,6 +46,12 @@ void Game::init()
         Logger::error("Creating renderer failed."s);
         return;
     }
+
+    // init camera
+    camera.x = 0;
+    camera.y = 0;
+    camera.w = displayMode.w;
+    camera.h = displayMode.h;
 
     SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
@@ -62,20 +69,31 @@ void Game::load_level(int level)
     registry->add_system<RenderColliderSystem>();
     registry->add_system<DamageSystem>();
     registry->add_system<KeyboardControlSystem>();
+    registry->add_system<CameraMovementSystem>();
 
+    registry->get_system<DamageSystem>().subscribe_events(event_bus);
+    registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
     // add textures
-    asset_store->add_texture(renderer, "tree-image", "../assets/images/tree.png");
+    asset_store->add_texture(renderer, "radar-image", "../assets/images/radar.png");
     asset_store->add_texture(renderer, "tilemap-image", "../assets/tilemaps/jungle.png");
-    asset_store->add_texture(renderer, "chopper-image", "../assets/images/chopper.png");
+    asset_store->add_texture(renderer, "chopper-image", "../assets/images/chopper-spritesheet.png");
     asset_store->add_texture(renderer, "tank-image-left", "../assets/images/tank-tiger-left.png");
     asset_store->add_texture(renderer, "tank-image-right", "../assets/images/tank-tiger-right.png");
 
     // test animation
     auto chopper = registry->create_entity();
     chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
-    chopper.add_component<RigidBodyComponent>(vec2(30, 10));
-    chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2);
+    chopper.add_component<RigidBodyComponent>(vec2(100, 10));
+    chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2, false, 0, tile_size);
     chopper.add_component<AnimationComponent>(2, 12, true);
+    chopper.add_component<KeyboardControlComponent>(vec2(0, -100), vec2(100, 0), vec2(0, 100), vec2(-100, 0));
+    chopper.add_component<CameraFollowComponent>();
+
+    // test fixed entity
+    auto radar = registry->create_entity();
+    radar.add_component<TransformComponent>(vec2(map_width - tile_size, tile_size / 4), vec2(1, 1), 0.0);
+    radar.add_component<SpriteComponent>("radar-image", 64, 64, 1, true);
+    radar.add_component<AnimationComponent>(8, 4, true);
 
     // test collision
     auto tank1 = registry->create_entity();
@@ -112,7 +130,7 @@ void Game::load_level(int level)
 
             Entity tile = registry->create_entity();
             tile.add_component<TransformComponent>(vec2(x * (tile_scale * tile_size), y * (tile_scale * tile_size)), vec2(tile_scale, tile_scale), 0.0);
-            tile.add_component<SpriteComponent>("tilemap-image", tile_size, tile_size, 0, src_rect_x, src_rect_y);
+            tile.add_component<SpriteComponent>("tilemap-image", tile_size, tile_size, 0, false, src_rect_x, src_rect_y);
         }
     }
     map_file.close();
@@ -152,7 +170,7 @@ void Game::process_input()
             break;
         case SDL_KEYDOWN:
             event_bus->emit<KeyPressedEvent>(sdlEvent.key.keysym.sym);
-            if (sdlEvent.key.keysym.sym == SDLK_d)
+            if (sdlEvent.key.keysym.sym == SDLK_SLASH)
             {
                 debug = !debug;
             }
@@ -167,18 +185,18 @@ void Game::process_input()
 
 void Game::update()
 {
-    event_bus->reset();
+    // event_bus->reset();
     auto current_ticks = SDL_GetTicks();
     auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
     // delta time
     float dt = (current_ticks - cum_ticks) / 1000.0f;
     registry->update();
-    registry->get_system<DamageSystem>().subscribe_events(event_bus);
-    registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
+
     registry->get_system<MovementSystem>().update(dt);
     registry->get_system<AnimationSystem>().update();
     registry->get_system<CollisionSystem>().update(event_bus);
     registry->get_system<DamageSystem>().update();
+    registry->get_system<CameraMovementSystem>().update(camera);
 
     if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
     {
@@ -192,7 +210,7 @@ void Game::render()
 {
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
-    registry->get_system<RenderSystem>().update(renderer, asset_store);
+    registry->get_system<RenderSystem>().update(renderer, asset_store, camera);
     if (debug)
     {
         registry->get_system<RenderColliderSystem>().update(renderer);

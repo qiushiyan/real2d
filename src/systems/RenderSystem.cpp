@@ -25,19 +25,8 @@ void RenderSystem::add_entity(Entity entity)
     _entities.insert(it, entity);
 }
 
-void RenderSystem::update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store)
+void RenderSystem::update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store, SDL_Rect &camera)
 {
-    // std::vector<RenderableEntity> renderable_entities;
-    // for (const auto &entity : entities())
-    // {
-    //     renderable_entities.emplace_back(entity.get_component<TransformComponent>(),
-    //                                      entity.get_component<SpriteComponent>());
-    // }
-
-    // std::sort(renderable_entities.begin(), renderable_entities.end(),
-    //           [](const RenderableEntity &a, const RenderableEntity &b)
-    //           { return a.sprite_component.z_index < b.sprite_component.z_index; });
-
     for (const auto &entity : entities())
     {
         auto &transform = entity.get_component<TransformComponent>();
@@ -46,8 +35,8 @@ void RenderSystem::update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &a
         // source rectangle and dest rectangle
         SDL_Rect src_rect = sprite.src_rect;
 
-        SDL_Rect dest_rect = {(int)transform.position.x,
-                              (int)transform.position.y,
+        SDL_Rect dest_rect = {(int)(transform.position.x - (sprite.is_fixed ? 0 : camera.x)),
+                              (int)(transform.position.y - (sprite.is_fixed ? 0 : camera.y)),
                               (int)(sprite.width * transform.scale.x),
                               (int)(sprite.height * transform.scale.y)};
 

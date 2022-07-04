@@ -16,6 +16,7 @@ private:
     std::unique_ptr<Registry> registry;
     std::unique_ptr<AssetStore> asset_store;
     std::shared_ptr<EventBus> event_bus;
+    SDL_Rect camera;
     bool debug{false};
 
 public:
@@ -29,9 +30,6 @@ public:
     void process_input();
     void render();
     void update();
-
-    const int windowHeight{constants::windowHeight};
-    const int windowWidth{constants::windowWidth};
 };
 
 #endif

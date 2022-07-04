@@ -15,6 +15,7 @@ Game::Game()
 {
     registry = std::make_unique<Registry>();
     asset_store = std::make_unique<AssetStore>();
+    event_bus = std::make_shared<EventBus>();
 }
 
 void Game::init()
@@ -58,7 +59,9 @@ void Game::load_level(int level)
     registry->add_system<RenderSystem>();
     registry->add_system<AnimationSystem>();
     registry->add_system<CollisionSystem>();
-    registry->add_system<RenderCollisionSystem>();
+    registry->add_system<RenderColliderSystem>();
+    registry->add_system<DamageSystem>();
+    registry->add_system<KeyboardControlSystem>();
 
     // add textures
     asset_store->add_texture(renderer, "tree-image", "../assets/images/tree.png");
@@ -82,7 +85,7 @@ void Game::load_level(int level)
     tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
 
     auto tank2 = registry->create_entity();
-    tank2.add_component<TransformComponent>(vec2(600, 30), vec2(1, 1), 0.0);
+    tank2.add_component<TransformComponent>(vec2(400, 30), vec2(1, 1), 0.0);
     tank2.add_component<RigidBodyComponent>(vec2(-50, 0));
     tank2.add_component<SpriteComponent>("tank-image-left", tile_size, tile_size, 2);
     tank2.add_component<BoxColliderComponent>(tile_size, tile_size, vec2(5));
@@ -148,6 +151,7 @@ void Game::process_input()
             running = false;
             break;
         case SDL_KEYDOWN:
+            event_bus->emit<KeyPressedEvent>(sdlEvent.key.keysym.sym);
             if (sdlEvent.key.keysym.sym == SDLK_d)
             {
                 debug = !debug;
@@ -163,14 +167,18 @@ void Game::process_input()
 
 void Game::update()
 {
+    event_bus->reset();
     auto current_ticks = SDL_GetTicks();
     auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
     // delta time
     float dt = (current_ticks - cum_ticks) / 1000.0f;
     registry->update();
+    registry->get_system<DamageSystem>().subscribe_events(event_bus);
+    registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
     registry->get_system<MovementSystem>().update(dt);
     registry->get_system<AnimationSystem>().update();
-    registry->get_system<CollisionSystem>().update();
+    registry->get_system<CollisionSystem>().update(event_bus);
+    registry->get_system<DamageSystem>().update();
 
     if (time_to_wait > 0 && time_to_wait < constants::TICKS_PER_FRAME)
     {
@@ -187,7 +195,7 @@ void Game::render()
     registry->get_system<RenderSystem>().update(renderer, asset_store);
     if (debug)
     {
-        registry->get_system<RenderCollisionSystem>().update(renderer);
+        registry->get_system<RenderColliderSystem>().update(renderer);
     }
     SDL_RenderPresent(renderer);
 }

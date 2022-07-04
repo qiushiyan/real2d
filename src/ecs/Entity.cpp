@@ -10,6 +10,11 @@ int Entity::id() const
     return _id;
 }
 
+void Entity::kill() const
+{
+    registry->kill_entity(*this);
+}
+
 bool Entity::operator==(const Entity &other) const
 {
     return _id == other.id();

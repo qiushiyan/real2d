@@ -1,15 +1,18 @@
 #ifndef ECS_H
 #define ECS_H
-#include "constants.hpp"
 #include <vector>
 #include <unordered_map>
-#include <typeindex>
 #include <set>
+#include <deque>
 #include <glm/glm.hpp>
 #include <memory>
 #include <iostream>
 #include <Logger.hpp>
 #include <SDL2/SDL.h>
+#include <typeindex>
+#include <functional>
+#include <list>
+#include "constants.hpp"
 #include "Store.hpp"
 
 using constants::Signature;
@@ -157,6 +160,7 @@ public:
     Entity(int id, Registry *registry) : _id(id), registry(registry){};
     void id(const int new_id);
     int id() const;
+    void kill() const;
     bool operator==(const Entity &other) const;
     bool operator!=(const Entity &other) const;
     bool operator>(const Entity &other) const;
@@ -170,6 +174,79 @@ public:
     bool has_component() const;
     template <typename TComponent>
     TComponent &get_component() const;
+};
+
+class Event
+{
+};
+
+class CollisionEvent : public Event
+{
+public:
+    Entity a;
+    Entity b;
+    CollisionEvent(Entity a, Entity b);
+};
+
+class KeyPressedEvent : public Event
+{
+public:
+    SDL_Keycode key;
+    KeyPressedEvent(SDL_Keycode key);
+};
+
+class IEventCallback
+{
+private:
+    virtual void call(Event &e) = 0;
+
+public:
+    virtual ~IEventCallback() = default;
+    void exec(Event &e)
+    {
+        call(e);
+    }
+};
+
+template <typename TOwner, typename TEvent>
+class EventCallback : public IEventCallback
+{
+private:
+    typedef void (TOwner::*Callback)(TEvent &);
+    TOwner *owner;
+    Callback callback;
+
+    virtual void call(Event &e) override
+    {
+        std::invoke(callback, owner, static_cast<TEvent &>(e));
+    }
+
+public:
+    virtual ~EventCallback() override = default;
+    EventCallback(TOwner *owner, Callback callback)
+    {
+        this->owner = owner;
+        this->callback = callback;
+    };
+    ;
+};
+
+using HandlerList = std::list<std::unique_ptr<IEventCallback>>;
+
+class EventBus
+{
+private:
+    std::map<std::type_index, std::unique_ptr<HandlerList>> subscribers;
+
+public:
+    void reset()
+    {
+        subscribers.clear();
+    };
+    template <typename TEvent, typename... TArgs>
+    void emit(TArgs &&...args);
+    template <typename TOwner, typename TEvent>
+    void subscribe(TOwner *owner, void (TOwner::*callback)(TEvent &));
 };
 
 // ============================================================
@@ -223,14 +300,32 @@ class CollisionSystem : public System
 public:
     CollisionSystem();
     bool collide(const Entity &entity, const Entity &other);
+    void update(std::shared_ptr<EventBus> event_bus);
+};
+
+class RenderColliderSystem : public System
+{
+public:
+    RenderColliderSystem();
+    void update(SDL_Renderer *renderer);
+};
+
+class DamageSystem : public System
+{
+public:
+    DamageSystem();
+    void subscribe_events(std::shared_ptr<EventBus> event_bus);
+    void on_collision(CollisionEvent &e);
     void update();
 };
 
-class RenderCollisionSystem : public System
+class KeyboardControlSystem : public System
 {
 public:
-    RenderCollisionSystem();
-    void update(SDL_Renderer *renderer);
+    KeyboardControlSystem();
+    void subscribe_events(std::shared_ptr<EventBus> event_bus);
+    void on_key_pressed(KeyPressedEvent &e);
+    void update();
 };
 
 // ============================================================
@@ -246,11 +341,11 @@ private:
     std::vector<std::shared_ptr<IPool>> component_pools = std::vector<std::shared_ptr<IPool>>(1000);
     std::vector<Signature> entity_component_signatures = std::vector<Signature>(1000);
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
+    std::deque<int> free_ids;
 
 public:
     Entity create_entity();
     void kill_entity(Entity entity);
-    void add_system(System system);
 
     // component management for a specific entity
     template <typename TComponent, typename... TArgs>
@@ -272,13 +367,14 @@ public:
     template <typename TSystem>
     TSystem &get_system() const;
 
-    // check for entity component signature and add the entity to all systems that match the component
+    // check for entity component signature and add / remove the entity to all systems that match the component
     void add_entity_to_systems(Entity entity);
+    void remove_entity_from_systems(Entity entity);
     void update();
 };
 
 // ============================================================
-// implement templated member functions
+// templated member function implementations
 // ============================================================
 
 // Entity
@@ -304,6 +400,34 @@ template <typename TComponent>
 TComponent &Entity::get_component() const
 {
     return registry->get_component<TComponent>(*this);
+}
+
+// EventBus
+
+template <typename TEvent, typename... TArgs>
+void EventBus::emit(TArgs &&...args)
+{
+    auto handlers = subscribers[std::type_index(typeid(TEvent))].get();
+    if (handlers)
+    {
+        for (auto it = handlers->begin(); it != handlers->end(); ++it)
+        {
+            auto handler = it->get();
+            TEvent event(std::forward<TArgs>(args)...);
+            handler->exec(event);
+        }
+    }
+};
+
+template <typename TOwner, typename TEvent>
+void EventBus::subscribe(TOwner *owner, void (TOwner::*callback)(TEvent &))
+{
+    if (!subscribers[typeid(TEvent)].get())
+    {
+        subscribers[typeid(TEvent)] = std::make_unique<HandlerList>();
+    }
+    auto handler = std::make_unique<EventCallback<TOwner, TEvent>>(owner, callback);
+    subscribers[typeid(TEvent)]->push_back(std::move(handler));
 }
 
 // Registry

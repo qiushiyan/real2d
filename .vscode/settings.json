@@ -53,6 +53,8 @@
     "ostream": "cpp",
     "iostream": "cpp",
     "istream": "cpp",
-    "fstream": "cpp"
+    "fstream": "cpp",
+    "list": "cpp",
+    "map": "cpp"
   }
 }

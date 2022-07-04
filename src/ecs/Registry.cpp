@@ -3,19 +3,34 @@ using glm::vec2;
 
 Entity Registry::create_entity()
 {
-    auto id = num_entities++;
-    if (id > entity_component_signatures.size())
+    int id;
+    num_entities += 1;
+    if (free_ids.empty())
     {
-        entity_component_signatures.resize(id + 1);
+        id = num_entities;
+        if (id > entity_component_signatures.size())
+        {
+            entity_component_signatures.resize(id + 1);
+        }
     }
+    else
+    {
+        id = free_ids.front();
+    }
+
     auto entity{Entity{id, this}};
     entities_to_add.insert(entity);
 
     return entity;
 }
 
+void Registry::kill_entity(Entity entity)
+{
+    entities_to_kill.insert(entity);
+}
+
 // ============================================================
-// system management
+// add and remove entities to matching systems
 // ============================================================
 void Registry::add_entity_to_systems(Entity entity)
 {
@@ -34,11 +49,28 @@ void Registry::add_entity_to_systems(Entity entity)
     }
 }
 
+void Registry::remove_entity_from_systems(Entity entity)
+{
+    for (const auto &system_pair : systems)
+    {
+        system_pair.second->remove_entity(entity);
+    }
+}
+
 void Registry::update()
 {
     for (const auto &entity : entities_to_add)
     {
         add_entity_to_systems(entity);
+    }
+
+    for (auto &entity : entities_to_kill)
+    {
+        remove_entity_from_systems(entity);
+
+        const auto entity_id = entity.id();
+        entity_component_signatures[entity_id].reset();
+        free_ids.push_back(entity_id);
     }
 
     entities_to_add.clear();

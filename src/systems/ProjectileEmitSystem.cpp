@@ -31,9 +31,10 @@ void ProjectileEmitSystem::emit_from(const Entity &entity, bool const_direction)
     }
 
     auto p = entity.registry->create_entity();
+    p.group("projectiles");
     p.add_component<TransformComponent>(projectile_position, transform.scale, transform.rotation);
     p.add_component<RigidBodyComponent>(projectile_velocity);
-    p.add_component<SpriteComponent>("bullet-image", 4, 4, 100);
+    p.add_component<SpriteComponent>("bullet-image", 4, 4, 1);
     p.add_component<BoxColliderComponent>(4, 4);
     p.add_component<ProjectileComponent>(projectile.duration, projectile.is_friendly, projectile.damage);
 

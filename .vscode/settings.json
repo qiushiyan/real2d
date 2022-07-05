@@ -55,6 +55,8 @@
     "istream": "cpp",
     "fstream": "cpp",
     "list": "cpp",
-    "map": "cpp"
+    "map": "cpp",
+    "ctime": "cpp",
+    "ratio": "cpp"
   }
 }

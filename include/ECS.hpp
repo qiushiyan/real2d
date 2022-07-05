@@ -197,7 +197,7 @@ class HealthComponent
 {
 public:
     int health;
-    HealthComponent(int health = 100);
+    HealthComponent(int health = 50);
 };
 
 // ============================================================
@@ -219,6 +219,11 @@ public:
     bool operator!=(const Entity &other) const;
     bool operator>(const Entity &other) const;
     bool operator<(const Entity &other) const;
+
+    void tag(const std::string &tag);
+    bool has_tag(const std::string &tag) const;
+    void group(const std::string &group);
+    bool belongs_to_group(const std::string &group) const;
 
     template <typename TComponent, typename... TArgs>
     void add_component(TArgs &&...args);
@@ -377,6 +382,8 @@ public:
     DamageSystem();
     void subscribe_events(std::shared_ptr<EventBus> event_bus);
     void on_collision(CollisionEvent &e);
+    void on_projectile_hit_player(Entity &projectile, Entity &player);
+    void on_projectile_hit_enemy(Entity &projectile, Entity &enemy);
     void update();
 };
 
@@ -439,6 +446,14 @@ private:
     std::unordered_map<std::type_index, std::shared_ptr<System>> systems;
     std::deque<int> free_ids;
 
+    // one unique tag per entity
+    std::unordered_map<int, std::string> tag_per_entity;
+    std::unordered_map<std::string, Entity> entity_per_tag;
+
+    // one group maps to many groups
+    std::unordered_map<std::string, std::set<Entity>> entities_per_group;
+    std::unordered_map<int, std::string> group_per_entity;
+
 public:
     Entity create_entity();
     void kill_entity(Entity entity);
@@ -452,6 +467,17 @@ public:
     bool has_component(Entity entity) const;
     template <typename TComponent>
     TComponent &get_component(Entity entity) const;
+
+    // tag and group management
+    void tag(Entity entity, const std::string &tag);
+    bool has_tag(Entity entity, const std::string &tag) const;
+    Entity get_entity_by_tag(const std::string &tag) const;
+    void remove_entity_tag(Entity entity);
+
+    void group(Entity entity, const std::string &group);
+    bool belongs_to_group(Entity entity, const std::string &group) const;
+    std::vector<Entity> get_entities_by_group(const std::string &group) const;
+    void remove_entity_group(Entity entity);
 
     // system management
     template <typename TSystem, typename... TArgs>

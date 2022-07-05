@@ -86,14 +86,16 @@ void Game::load_level(int level)
 
     // test animation
     auto chopper = registry->create_entity();
+    chopper.tag("player");
     chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
     chopper.add_component<RigidBodyComponent>(vec2(100, 0));
     chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2, false, 0, tile_size);
     chopper.add_component<AnimationComponent>(2, 12, true);
+    chopper.add_component<BoxColliderComponent>(tile_size, tile_size);
     chopper.add_component<KeyboardControlComponent>(vec2(0, -100), vec2(100, 0), vec2(0, 100), vec2(-100, 0));
     chopper.add_component<CameraFollowComponent>();
     chopper.add_component<HealthComponent>();
-    chopper.add_component<ProjectileEmitterComponent>(vec2(150, 150), 0, 5000);
+    chopper.add_component<ProjectileEmitterComponent>(vec2(150, 150), 0, 5000, true, 10);
 
     // test fixed entity
     auto radar = registry->create_entity();
@@ -103,12 +105,13 @@ void Game::load_level(int level)
 
     // test collision
     auto tank1 = registry->create_entity();
-    tank1.add_component<TransformComponent>(vec2(30, 100), vec2(1, 1), 0.0);
-    tank1.add_component<RigidBodyComponent>(vec2(50, 0));
+    tank1.group("enemies");
+    tank1.add_component<TransformComponent>(vec2(50, 100), vec2(1, 1), 0.0);
+    tank1.add_component<RigidBodyComponent>(vec2(0, 0));
     tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size, 3);
     tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
-    tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 500, 5000, false, 10);
-    tank1.add_component<HealthComponent>();
+    tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 1000, 5000, false, 10);
+    tank1.add_component<HealthComponent>(30);
 
     // auto tank2 = registry->create_entity();
     // tank2.add_component<TransformComponent>(vec2(400, 30), vec2(1, 1), 0.0);
@@ -137,6 +140,7 @@ void Game::load_level(int level)
             map_file.ignore();
 
             Entity tile = registry->create_entity();
+            tile.group("tiles");
             tile.add_component<TransformComponent>(vec2(x * (tile_scale * tile_size), y * (tile_scale * tile_size)), vec2(tile_scale, tile_scale), 0.0);
             tile.add_component<SpriteComponent>("tilemap-image", tile_size, tile_size, 0, false, src_rect_x, src_rect_y);
         }

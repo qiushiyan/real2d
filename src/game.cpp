@@ -14,7 +14,7 @@ using glm::vec2;
 Game::Game()
 {
     registry = std::make_shared<Registry>();
-    asset_store = std::make_unique<AssetStore>();
+    asset_store = std::make_shared<AssetStore>();
     event_bus = std::make_shared<EventBus>();
 }
 
@@ -26,6 +26,14 @@ void Game::init()
         Logger::error("SDL initialization failed."s);
         return;
     }
+
+    if (TTF_Init() != 0)
+    {
+        Logger::error("TTF initialization failed."s);
+        return;
+    }
+
+    TTF_Init();
 
     SDL_DisplayMode displayMode;
     SDL_GetCurrentDisplayMode(0, &displayMode);
@@ -72,6 +80,7 @@ void Game::load_level(int level)
     registry->add_system<CameraMovementSystem>();
     registry->add_system<ProjectileEmitSystem>();
     registry->add_system<ProjectileLifecycleSystem>();
+    registry->add_system<RenderTextSystem>();
 
     registry->get_system<DamageSystem>().subscribe_events(event_bus);
     registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
@@ -83,11 +92,12 @@ void Game::load_level(int level)
     asset_store->add_texture(renderer, "tank-image-left", "../assets/images/tank-tiger-left.png");
     asset_store->add_texture(renderer, "tank-image-right", "../assets/images/tank-tiger-right.png");
     asset_store->add_texture(renderer, "bullet-image", "../assets/images/bullet.png");
+    asset_store->add_font(renderer, "main", "../assets/fonts/whatnot.ttf", 20);
 
     // test animation
     auto chopper = registry->create_entity();
     chopper.tag("player");
-    chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1), 0.0);
+    chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1));
     chopper.add_component<RigidBodyComponent>(vec2(100, 0));
     chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2, false, 0, tile_size);
     chopper.add_component<AnimationComponent>(2, 12, true);
@@ -99,7 +109,8 @@ void Game::load_level(int level)
 
     // test fixed entity
     auto radar = registry->create_entity();
-    radar.add_component<TransformComponent>(vec2(map_width - tile_size, tile_size / 4), vec2(1, 1), 0.0);
+    radar.tag("radar");
+    radar.add_component<TransformComponent>(vec2(window_width - tile_size, tile_size / 4), vec2(1, 1));
     radar.add_component<SpriteComponent>("radar-image", 64, 64, 1, true);
     radar.add_component<AnimationComponent>(8, 4, true);
 
@@ -113,11 +124,10 @@ void Game::load_level(int level)
     tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 1000, 5000, false, 10);
     tank1.add_component<HealthComponent>(30);
 
-    // auto tank2 = registry->create_entity();
-    // tank2.add_component<TransformComponent>(vec2(400, 30), vec2(1, 1), 0.0);
-    // tank2.add_component<RigidBodyComponent>(vec2(-50, 0));
-    // tank2.add_component<SpriteComponent>("tank-image-left", tile_size, tile_size, 2);
-    // tank2.add_component<BoxColliderComponent>(tile_size, tile_size, vec2(5));
+    // test text
+    Entity label = registry->create_entity();
+    SDL_Color color = {0, 255, 0};
+    label.add_component<TextComponent>(vec2(window_width / 2 - 40, 10), "Chopper 1.0", "main", color);
 
     // load tilemap and create entities
     std::fstream map_file;
@@ -230,6 +240,7 @@ void Game::render()
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
     registry->get_system<RenderSystem>().update(renderer, asset_store, camera);
+    registry->get_system<RenderTextSystem>().update(renderer, asset_store, camera);
     if (debug)
     {
         registry->get_system<RenderColliderSystem>().update(renderer, camera);

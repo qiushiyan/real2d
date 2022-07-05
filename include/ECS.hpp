@@ -247,6 +247,17 @@ public:
     HealthComponent(int health = 50);
 };
 
+class TextComponent
+{
+public:
+    vec2 position;
+    std::string text;
+    std::string font_name;
+    SDL_Color color;
+    bool is_fixed;
+    TextComponent(vec2 position = vec2(0), std::string text = "", std::string font_name = "", const SDL_Color color = {0, 0, 0}, bool is_fixed = true);
+};
+
 // ============================================================
 // Entity
 // ============================================================
@@ -398,7 +409,7 @@ class RenderSystem : public System
 public:
     RenderSystem();
     void add_entity(Entity entity) override final;
-    void update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store, SDL_Rect &camera);
+    void update(SDL_Renderer *renderer, std::shared_ptr<AssetStore> asset_store, SDL_Rect &camera);
 };
 
 class AnimationSystem : public System
@@ -406,6 +417,13 @@ class AnimationSystem : public System
 public:
     AnimationSystem();
     void update();
+};
+
+class RenderTextSystem : public System
+{
+public:
+    RenderTextSystem();
+    void update(SDL_Renderer *renderer, std::shared_ptr<AssetStore> asset_store, const SDL_Rect &camera);
 };
 
 class CollisionSystem : public System
@@ -691,6 +709,10 @@ template <typename TSystem>
 TSystem &Registry::get_system() const
 {
     auto it = systems.find(std::type_index(typeid(TSystem)));
+    if (it == systems.end())
+    {
+        throw std::runtime_error("System not found");
+    }
     return *(std::static_pointer_cast<TSystem>(it->second));
 };
 

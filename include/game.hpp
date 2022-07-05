@@ -14,7 +14,7 @@ private:
     SDL_Window *window;
     SDL_Renderer *renderer;
     std::shared_ptr<Registry> registry;
-    std::unique_ptr<AssetStore> asset_store;
+    std::shared_ptr<AssetStore> asset_store;
     std::shared_ptr<EventBus> event_bus;
     SDL_Rect camera;
     bool debug{false};

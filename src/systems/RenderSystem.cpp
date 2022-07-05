@@ -25,7 +25,7 @@ void RenderSystem::add_entity(Entity entity)
     _entities.insert(it, entity);
 }
 
-void RenderSystem::update(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &asset_store, SDL_Rect &camera)
+void RenderSystem::update(SDL_Renderer *renderer, std::shared_ptr<AssetStore> asset_store, SDL_Rect &camera)
 {
     for (const auto &entity : entities())
     {

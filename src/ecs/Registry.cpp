@@ -155,11 +155,26 @@ void Registry::update()
 
     for (auto &entity : entities_to_kill)
     {
+        // remove entity from the system's entity vector
         remove_entity_from_systems(entity);
 
+        // reset component signature at that entity id
         const auto entity_id = entity.id();
         entity_component_signatures[entity_id].reset();
+
+        // remove entity's component instance from the corresponding component pool
+        for (auto &pool : component_pools)
+        {
+            if (pool)
+            {
+                pool->remove(entity_id);
+            }
+        }
+
+        // release id
         free_ids.push_back(entity_id);
+
+        // remove tags and groups
         remove_entity_tag(entity);
         remove_entity_group(entity);
     }

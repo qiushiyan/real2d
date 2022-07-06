@@ -22,6 +22,33 @@ void MovementSystem::update(float dt)
         if (outside_map && !entity.has_tag("player"))
         {
             entity.kill();
-            // Logger::info("Entity " + std::to_string(entity.id()) + " is now " + std::to_string(transform.position.x) + "," + std::to_string(transform.position.y));
+        }
+
+        if (entity.has_tag("player"))
+        {
+            auto &sprite = entity.get_component<SpriteComponent>();
+            if (transform.position.x < sprite.width)
+            {
+                transform.position.x = 0;
+            }
+
+            if (transform.position.x > constants::map_width - sprite.width)
+            {
+                transform.position.x = constants::map_width - sprite.width;
+            }
+            {
+                transform.position.x = constants::map_width;
+            }
+
+            if (transform.position.y < 0)
+            {
+                transform.position.y = 0;
+            }
+
+            if (transform.position.y > constants::map_height - sprite.height)
+            {
+                transform.position.y = constants::map_height - sprite.height;
+            }
         }
     }
+}

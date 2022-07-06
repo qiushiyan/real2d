@@ -15,10 +15,5 @@ void ProjectileLifecycleSystem::update()
         {
             entity.kill();
         }
-
-        if (transform.position.x < 0 || transform.position.x > constants::map_width || transform.position.y < 0 || transform.position.y > constants::map_height)
-        {
-            entity.kill();
-        }
     }
 }

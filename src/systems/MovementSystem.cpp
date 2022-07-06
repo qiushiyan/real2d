@@ -14,20 +14,34 @@ void MovementSystem::update(float dt)
         auto &transform = entity.get_component<TransformComponent>();
         auto &rigid_body = entity.get_component<RigidBodyComponent>();
 
-        transform.position.x += rigid_body.velocity.x * dt;
-        transform.position.y += rigid_body.velocity.y * dt;
+        vec2 movement = rigid_body.velocity * dt;
+        if (entity.has_component<SprintComponent>())
+        {
+            auto &sprint = entity.get_component<SprintComponent>();
+            bool no_sprint = (SDL_GetTicks() - sprint.last_sprint_time > sprint.sprint_duration);
+            movement *= (sprint.in_sprint ? sprint.sprint_speed : 1);
+            if (sprint.in_sprint && no_sprint)
+            {
+                sprint.in_sprint = false;
+            }
+        }
+
+        transform.position += movement;
 
         // kill entity outside the map
-        bool outside_map = transform.position.x < 0 || transform.position.x > constants::map_width || transform.position.y < 0 || transform.position.y > constants::map_height;
-        if (outside_map && !entity.has_tag("player"))
+        if (!entity.has_tag("player"))
         {
-            entity.kill();
+            bool outside_map = transform.position.x < 0 || transform.position.x > constants::map_width || transform.position.y < 0 || transform.position.y > constants::map_height;
+            if (outside_map)
+            {
+                entity.kill();
+            }
         }
 
         if (entity.has_tag("player"))
         {
             auto &sprite = entity.get_component<SpriteComponent>();
-            if (transform.position.x < sprite.width)
+            if (transform.position.x < 0)
             {
                 transform.position.x = 0;
             }
@@ -35,9 +49,6 @@ void MovementSystem::update(float dt)
             if (transform.position.x > constants::map_width - sprite.width)
             {
                 transform.position.x = constants::map_width - sprite.width;
-            }
-            {
-                transform.position.x = constants::map_width;
             }
 
             if (transform.position.y < 0)

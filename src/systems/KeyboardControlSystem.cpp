@@ -7,9 +7,20 @@ KeyboardControlSystem::KeyboardControlSystem()
     require_component<SpriteComponent>();
 }
 
+void speed_up(Entity &entity)
+{
+    SprintComponent &sprint = entity.get_component<SprintComponent>();
+    bool can_sprint = SDL_GetTicks() > sprint.last_sprint_time + sprint.sprint_cooldown + sprint.sprint_duration;
+    if (!sprint.in_sprint && can_sprint)
+    {
+        sprint.in_sprint = true;
+        sprint.last_sprint_time = SDL_GetTicks();
+    }
+}
+
 void KeyboardControlSystem::on_key_pressed(KeyPressedEvent &e)
 {
-    for (const auto &entity : entities())
+    for (auto &entity : entities())
     {
         const auto &keyboard = entity.get_component<KeyboardControlComponent>();
         auto &rigid_body = entity.get_component<RigidBodyComponent>();
@@ -33,6 +44,17 @@ void KeyboardControlSystem::on_key_pressed(KeyPressedEvent &e)
             rigid_body.velocity = keyboard.left_velocity;
             sprite.src_rect.y = sprite.height * 3;
             break;
+        case SDLK_LSHIFT:
+            if (entity.has_component<SprintComponent>())
+            {
+                speed_up(entity);
+            }
+            break;
+        case SDLK_RSHIFT:
+            if (entity.has_component<SprintComponent>())
+            {
+                speed_up(entity);
+            }
         }
     }
 }

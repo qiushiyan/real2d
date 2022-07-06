@@ -10,7 +10,6 @@ void ProjectileLifecycleSystem::update()
     for (auto entity : entities())
     {
         const auto &projectile = entity.get_component<ProjectileComponent>();
-        const auto &transform = entity.get_component<TransformComponent>();
         if (SDL_GetTicks() > (projectile.start_time + projectile.duration))
         {
             entity.kill();

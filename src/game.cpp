@@ -126,6 +126,7 @@ void Game::load_level(int level)
     chopper.tag("player");
     chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1));
     chopper.add_component<RigidBodyComponent>(vec2(100, 0));
+    chopper.add_component<SprintComponent>();
     chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size,
                                            2, false, 0, tile_size);
     chopper.add_component<AnimationComponent>(2, 12, true);

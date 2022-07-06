@@ -159,7 +159,18 @@ class RigidBodyComponent
 {
 public:
     vec2 velocity;
-    RigidBodyComponent(vec2 velocity = vec2{0, 0});
+    RigidBodyComponent(vec2 velocity = vec2(0));
+};
+
+class SprintComponent
+{
+public:
+    bool in_sprint;
+    float sprint_speed;
+    int sprint_duration;
+    int sprint_cooldown;
+    int last_sprint_time;
+    SprintComponent(bool in_sprit = false, float sprint_speed = 2, int sprint_duration = 3000, int sprint_cooldown = 5000);
 };
 
 class SpriteComponent

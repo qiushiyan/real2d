@@ -31,5 +31,8 @@ void RenderTextSystem::update(SDL_Renderer *renderer, std::shared_ptr<AssetStore
             (int)(text_height)};
 
         SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
+
+        // release texture resource
+        SDL_DestroyTexture(texture);
     }
 }

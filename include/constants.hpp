@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 #include <bitset>
+#include <string_view>
 
 // define your own namespace to hold constants
 namespace constants
@@ -17,6 +18,8 @@ namespace constants
     inline constexpr int map_cols{25};
     inline constexpr double map_width{map_cols * tile_size * tile_scale};
     inline constexpr double map_height{map_rows * tile_size * tile_scale};
+    inline constexpr int healthbar_width{15};
+    inline constexpr int healthbar_height{3};
 
     using Signature = std::bitset<MAX_COMPONENTS>;
 

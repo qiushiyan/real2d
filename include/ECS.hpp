@@ -226,7 +226,7 @@ public:
     int damage; // damage of the projectile, in percentage
     int last_emission_time;
 
-    ProjectileEmitterComponent(vec2 velocity = vec2(0), int freq = 500, int duration = 5000, bool is_friendly = true, int damage = 0);
+    ProjectileEmitterComponent(vec2 velocity = vec2(0), int freq = 500, int duration = 5000, bool is_friendly = true, int damage = 20);
 };
 
 class ProjectileComponent
@@ -237,14 +237,14 @@ public:
     int damage;
     int start_time;
 
-    ProjectileComponent(int duration = 5000, bool is_friendly = true, int damage = 0);
+    ProjectileComponent(int duration = 5000, bool is_friendly = true, int damage = 20);
 };
 
 class HealthComponent
 {
 public:
     int health;
-    HealthComponent(int health = 50);
+    HealthComponent(int health = 100);
 };
 
 class TextComponent
@@ -424,6 +424,13 @@ class RenderTextSystem : public System
 public:
     RenderTextSystem();
     void update(SDL_Renderer *renderer, std::shared_ptr<AssetStore> asset_store, const SDL_Rect &camera);
+};
+
+class RenderHealthSystem : public System
+{
+public:
+    RenderHealthSystem();
+    void update(SDL_Renderer *renderer, std::shared_ptr<AssetStore> asset_store, SDL_Rect &camera);
 };
 
 class CollisionSystem : public System

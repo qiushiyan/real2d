@@ -81,6 +81,7 @@ void Game::load_level(int level)
     registry->add_system<ProjectileEmitSystem>();
     registry->add_system<ProjectileLifecycleSystem>();
     registry->add_system<RenderTextSystem>();
+    registry->add_system<RenderHealthSystem>();
 
     registry->get_system<DamageSystem>().subscribe_events(event_bus);
     registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
@@ -92,7 +93,8 @@ void Game::load_level(int level)
     asset_store->add_texture(renderer, "tank-image-left", "../assets/images/tank-tiger-left.png");
     asset_store->add_texture(renderer, "tank-image-right", "../assets/images/tank-tiger-right.png");
     asset_store->add_texture(renderer, "bullet-image", "../assets/images/bullet.png");
-    asset_store->add_font(renderer, "main", "../assets/fonts/whatnot.ttf", 20);
+    asset_store->add_font(renderer, "main_font", "../assets/fonts/whatnot.ttf", 20);
+    asset_store->add_font(renderer, "sub_font", "../assets/fonts/charriot.ttf", 7);
 
     // test animation
     auto chopper = registry->create_entity();
@@ -122,12 +124,12 @@ void Game::load_level(int level)
     tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size, 3);
     tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
     tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 1000, 5000, false, 10);
-    tank1.add_component<HealthComponent>(30);
+    tank1.add_component<HealthComponent>(100);
 
     // test text
     Entity label = registry->create_entity();
     SDL_Color color = {0, 255, 0};
-    label.add_component<TextComponent>(vec2(window_width / 2 - 40, 10), "Chopper 1.0", "main", color);
+    label.add_component<TextComponent>(vec2(window_width / 2 - 40, 10), "Chopper 1.0", "main_font", color);
 
     // load tilemap and create entities
     std::fstream map_file;
@@ -212,7 +214,6 @@ void Game::process_input()
 
 void Game::update()
 {
-    // event_bus->reset();
     auto current_ticks = SDL_GetTicks();
     auto time_to_wait = constants::TICKS_PER_FRAME - (current_ticks - cum_ticks);
     // delta time
@@ -237,10 +238,10 @@ void Game::update()
 
 void Game::render()
 {
-    SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
     registry->get_system<RenderSystem>().update(renderer, asset_store, camera);
     registry->get_system<RenderTextSystem>().update(renderer, asset_store, camera);
+    registry->get_system<RenderHealthSystem>().update(renderer, asset_store, camera);
     if (debug)
     {
         registry->get_system<RenderColliderSystem>().update(renderer, camera);

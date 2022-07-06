@@ -503,6 +503,13 @@ public:
     void update();
 };
 
+class RenderGuiSystem : public System
+{
+public:
+    RenderGuiSystem();
+    void update(std::shared_ptr<Registry> registry, SDL_Rect &camera);
+};
+
 // ============================================================
 // Registry
 // ============================================================

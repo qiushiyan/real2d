@@ -18,6 +18,7 @@ private:
     std::shared_ptr<EventBus> event_bus;
     SDL_Rect camera;
     bool debug{false};
+    bool show_gui{false};
 
 public:
     Game();

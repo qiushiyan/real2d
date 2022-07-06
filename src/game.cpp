@@ -1,13 +1,16 @@
 #include "Game.hpp"
-#include "ECS.hpp"
-#include <Logger.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <glm/glm.hpp>
+#include <imgui.h>
+#include <Logger.hpp>
 #include <exception>
-#include <stdexcept>
-#include <memory>
 #include <fstream>
+#include <glm/glm.hpp>
+#include <memory>
+#include <stdexcept>
+#include "ECS.hpp"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_sdlrenderer.h"
 using namespace std::string_literals;
 using glm::vec2;
 
@@ -33,12 +36,12 @@ void Game::init()
         return;
     }
 
-    TTF_Init();
-
     SDL_DisplayMode displayMode;
     SDL_GetCurrentDisplayMode(0, &displayMode);
 
-    window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, SDL_WINDOW_BORDERLESS);
+    window =
+        SDL_CreateWindow(NULL, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                         window_width, window_height, SDL_WINDOW_BORDERLESS);
 
     if (!window)
     {
@@ -47,13 +50,22 @@ void Game::init()
     }
 
     // -1 means default renderer
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(
+        window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     if (!renderer)
     {
         Logger::error("Creating renderer failed."s);
         return;
     }
+
+    // init imgui
+    ImGui::CreateContext();
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer_Init(renderer);
 
     // init camera
     camera.x = 0;
@@ -82,37 +94,54 @@ void Game::load_level(int level)
     registry->add_system<ProjectileLifecycleSystem>();
     registry->add_system<RenderTextSystem>();
     registry->add_system<RenderHealthSystem>();
+    registry->add_system<RenderGuiSystem>();
 
     registry->get_system<DamageSystem>().subscribe_events(event_bus);
     registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
     registry->get_system<ProjectileEmitSystem>().subscribe_events(event_bus);
     // add textures
-    asset_store->add_texture(renderer, "radar-image", "../assets/images/radar.png");
-    asset_store->add_texture(renderer, "tilemap-image", "../assets/tilemaps/jungle.png");
-    asset_store->add_texture(renderer, "chopper-image", "../assets/images/chopper-spritesheet.png");
-    asset_store->add_texture(renderer, "tank-image-left", "../assets/images/tank-tiger-left.png");
-    asset_store->add_texture(renderer, "tank-image-right", "../assets/images/tank-tiger-right.png");
-    asset_store->add_texture(renderer, "bullet-image", "../assets/images/bullet.png");
-    asset_store->add_font(renderer, "main_font", "../assets/fonts/whatnot.ttf", 20);
-    asset_store->add_font(renderer, "sub_font", "../assets/fonts/charriot.ttf", 7);
+    asset_store->add_texture(renderer, "radar-image",
+                             "../assets/images/radar.png");
+    asset_store->add_texture(renderer, "tilemap-image",
+                             "../assets/tilemaps/jungle.png");
+    asset_store->add_texture(renderer, "chopper-image",
+                             "../assets/images/chopper-spritesheet.png");
+    asset_store->add_texture(renderer, "tank-image-left",
+                             "../assets/images/tank-tiger-left.png");
+    asset_store->add_texture(renderer, "tank-image-right",
+                             "../assets/images/tank-tiger-right.png");
+    asset_store->add_texture(renderer, "truck-image-left",
+                             "../assets/images/truck-ford-left.png");
+    asset_store->add_texture(renderer, "truck-image-right",
+                             "../assets/images/truck-ford-right.png");
+    asset_store->add_texture(renderer, "bullet-image",
+                             "../assets/images/bullet.png");
+    asset_store->add_font(renderer, "main_font", "../assets/fonts/whatnot.ttf",
+                          20);
+    asset_store->add_font(renderer, "sub_font", "../assets/fonts/charriot.ttf",
+                          7);
 
     // test animation
     auto chopper = registry->create_entity();
     chopper.tag("player");
     chopper.add_component<TransformComponent>(vec2(10, 20), vec2(1, 1));
     chopper.add_component<RigidBodyComponent>(vec2(100, 0));
-    chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size, 2, false, 0, tile_size);
+    chopper.add_component<SpriteComponent>("chopper-image", tile_size, tile_size,
+                                           2, false, 0, tile_size);
     chopper.add_component<AnimationComponent>(2, 12, true);
     chopper.add_component<BoxColliderComponent>(tile_size, tile_size);
-    chopper.add_component<KeyboardControlComponent>(vec2(0, -100), vec2(100, 0), vec2(0, 100), vec2(-100, 0));
+    chopper.add_component<KeyboardControlComponent>(vec2(0, -100), vec2(100, 0),
+                                                    vec2(0, 100), vec2(-100, 0));
     chopper.add_component<CameraFollowComponent>();
     chopper.add_component<HealthComponent>();
-    chopper.add_component<ProjectileEmitterComponent>(vec2(150, 150), 0, 5000, true, 10);
+    chopper.add_component<ProjectileEmitterComponent>(vec2(150, 150), 0, 5000,
+                                                      true, 10);
 
     // test fixed entity
     auto radar = registry->create_entity();
     radar.tag("radar");
-    radar.add_component<TransformComponent>(vec2(window_width - tile_size, tile_size / 4), vec2(1, 1));
+    radar.add_component<TransformComponent>(
+        vec2(window_width - tile_size, tile_size / 4), vec2(1, 1));
     radar.add_component<SpriteComponent>("radar-image", 64, 64, 1, true);
     radar.add_component<AnimationComponent>(8, 4, true);
 
@@ -121,15 +150,18 @@ void Game::load_level(int level)
     tank1.group("enemies");
     tank1.add_component<TransformComponent>(vec2(50, 100), vec2(1, 1), 0.0);
     tank1.add_component<RigidBodyComponent>(vec2(0, 0));
-    tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size, 3);
+    tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size,
+                                         3);
     tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
-    tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 1000, 5000, false, 10);
+    tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 1000, 5000,
+                                                    false, 10);
     tank1.add_component<HealthComponent>(100);
 
     // test text
     Entity label = registry->create_entity();
     SDL_Color color = {0, 255, 0};
-    label.add_component<TextComponent>(vec2(window_width / 2 - 40, 10), "Chopper 1.0", "main_font", color);
+    label.add_component<TextComponent>(vec2(window_width / 2 - 40, 10),
+                                       "Chopper 1.0", "main_font", color);
 
     // load tilemap and create entities
     std::fstream map_file;
@@ -153,17 +185,17 @@ void Game::load_level(int level)
 
             Entity tile = registry->create_entity();
             tile.group("tiles");
-            tile.add_component<TransformComponent>(vec2(x * (tile_scale * tile_size), y * (tile_scale * tile_size)), vec2(tile_scale, tile_scale), 0.0);
-            tile.add_component<SpriteComponent>("tilemap-image", tile_size, tile_size, 0, false, src_rect_x, src_rect_y);
+            tile.add_component<TransformComponent>(
+                vec2(x * (tile_scale * tile_size), y * (tile_scale * tile_size)),
+                vec2(tile_scale, tile_scale), 0.0);
+            tile.add_component<SpriteComponent>("tilemap-image", tile_size, tile_size,
+                                                0, false, src_rect_x, src_rect_y);
         }
     }
     map_file.close();
 }
 
-void Game::setup()
-{
-    load_level(1);
-}
+void Game::setup() { load_level(1); }
 
 void Game::run()
 {
@@ -187,6 +219,16 @@ void Game::process_input()
     SDL_Event sdlEvent;
     while (SDL_PollEvent(&sdlEvent))
     {
+        // ImGui SDL input
+        ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
+        ImGuiIO &io = ImGui::GetIO();
+        int mouse_x, mouse_y;
+        const int buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+        io.MousePos = ImVec2(static_cast<float>(mouse_x), static_cast<float>(mouse_y));
+        io.MouseDown[0] = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
+        io.MouseDown[1] = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
+
+        // handle core SDL events
         switch (sdlEvent.type)
         {
         case SDL_QUIT:
@@ -201,6 +243,10 @@ void Game::process_input()
             if (sdlEvent.key.keysym.sym == SDLK_ESCAPE)
             {
                 running = false;
+            }
+            if (sdlEvent.key.keysym.sym == SDLK_F1)
+            {
+                show_gui = !show_gui;
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
@@ -240,11 +286,17 @@ void Game::render()
 {
     SDL_RenderClear(renderer);
     registry->get_system<RenderSystem>().update(renderer, asset_store, camera);
-    registry->get_system<RenderTextSystem>().update(renderer, asset_store, camera);
-    registry->get_system<RenderHealthSystem>().update(renderer, asset_store, camera);
+    registry->get_system<RenderTextSystem>().update(renderer, asset_store,
+                                                    camera);
+    registry->get_system<RenderHealthSystem>().update(renderer, asset_store,
+                                                      camera);
     if (debug)
     {
         registry->get_system<RenderColliderSystem>().update(renderer, camera);
+    }
+    if (show_gui)
+    {
+        registry->get_system<RenderGuiSystem>().update(registry, camera);
     }
     SDL_RenderPresent(renderer);
 }

@@ -96,6 +96,7 @@ void Game::load_level(int level)
     registry->add_system<RenderHealthSystem>();
     registry->add_system<RenderGuiSystem>();
 
+    registry->get_system<MovementSystem>().subscribe_events(event_bus);
     registry->get_system<DamageSystem>().subscribe_events(event_bus);
     registry->get_system<KeyboardControlSystem>().subscribe_events(event_bus);
     registry->get_system<ProjectileEmitSystem>().subscribe_events(event_bus);
@@ -116,6 +117,7 @@ void Game::load_level(int level)
                              "../assets/images/truck-ford-right.png");
     asset_store->add_texture(renderer, "bullet-image",
                              "../assets/images/bullet.png");
+    asset_store->add_texture(renderer, "tree-image", "../assets/images/tree.png");
     asset_store->add_font(renderer, "main_font", "../assets/fonts/whatnot.ttf",
                           20);
     asset_store->add_font(renderer, "sub_font", "../assets/fonts/charriot.ttf",
@@ -149,14 +151,26 @@ void Game::load_level(int level)
     // test collision
     auto tank1 = registry->create_entity();
     tank1.group("enemies");
-    tank1.add_component<TransformComponent>(vec2(50, 100), vec2(1, 1), 0.0);
-    tank1.add_component<RigidBodyComponent>(vec2(0, 0));
+    tank1.add_component<TransformComponent>(vec2(100, 100), vec2(1, 1), 0.0);
+    tank1.add_component<RigidBodyComponent>(vec2(30, 0));
     tank1.add_component<SpriteComponent>("tank-image-right", tile_size, tile_size,
                                          3);
-    tank1.add_component<BoxColliderComponent>(tile_size, tile_size);
+    tank1.add_component<BoxColliderComponent>(tile_size, tile_size, vec2(3));
     tank1.add_component<ProjectileEmitterComponent>(vec2(200, 0), 1000, 5000,
                                                     false, 10);
     tank1.add_component<HealthComponent>(100);
+
+    auto tree1 = registry->create_entity();
+    tree1.group("obstacles");
+    tree1.add_component<TransformComponent>(vec2(200, 100), vec2(1, 1), 0.0);
+    tree1.add_component<SpriteComponent>("tree-image", tile_size, tile_size, 3);
+    tree1.add_component<BoxColliderComponent>(tile_size, tile_size);
+
+    auto tree2 = registry->create_entity();
+    tree2.group("obstacles");
+    tree2.add_component<TransformComponent>(vec2(40, 100), vec2(1, 1), 0.0);
+    tree2.add_component<SpriteComponent>("tree-image", tile_size, tile_size, 3);
+    tree2.add_component<BoxColliderComponent>(tile_size, tile_size);
 
     // test text
     Entity label = registry->create_entity();

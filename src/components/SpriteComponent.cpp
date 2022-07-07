@@ -8,5 +8,6 @@ SpriteComponent::SpriteComponent(std::string asset_name, int width, int height, 
     this->height = height;
     this->z_index = z_index;
     this->is_fixed = is_fixed;
+    this->flip = SDL_FLIP_NONE;
     this->src_rect = {src_rect_x, src_rect_y, width, height};
 };

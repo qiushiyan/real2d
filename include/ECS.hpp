@@ -181,6 +181,7 @@ public:
     int height;
     int z_index;
     bool is_fixed;
+    SDL_RendererFlip flip;
     SDL_Rect src_rect;
     SpriteComponent(std::string asset_name = ""s, int width = 32, int height = 32, int z_index = 0, bool is_fixed = false, int src_rect_x = 0, int src_rect_y = 0);
 };
@@ -412,6 +413,8 @@ class MovementSystem : public System
 {
 public:
     MovementSystem();
+    void on_collision(CollisionEvent &e);
+    void subscribe_events(std::shared_ptr<EventBus> event_bus);
     void update(const float dt);
 };
 

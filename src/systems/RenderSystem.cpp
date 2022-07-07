@@ -29,17 +29,29 @@ void RenderSystem::update(SDL_Renderer *renderer, std::shared_ptr<AssetStore> as
 {
     for (const auto &entity : entities())
     {
+
         auto &transform = entity.get_component<TransformComponent>();
         auto &sprite = entity.get_component<SpriteComponent>();
 
-        // source rectangle and dest rectangle
-        SDL_Rect src_rect = sprite.src_rect;
+        // bypass entities outside of camera view
+        int padding = 50;
 
-        SDL_Rect dest_rect = {(int)(transform.position.x - (sprite.is_fixed ? 0 : camera.x)),
-                              (int)(transform.position.y - (sprite.is_fixed ? 0 : camera.y)),
-                              (int)(sprite.width * transform.scale.x),
-                              (int)(sprite.height * transform.scale.y)};
+        bool is_outside_camera = (transform.position.x + sprite.width + padding < camera.x ||
+                                  transform.position.x > camera.x + camera.w + sprite.width + padding ||
+                                  transform.position.y + sprite.height + padding < camera.y ||
+                                  transform.position.y > camera.y + camera.h + sprite.height + padding);
 
-        SDL_RenderCopyEx(renderer, asset_store->get_texture(sprite.asset_name), &src_rect, &dest_rect, transform.rotation, NULL, SDL_FLIP_NONE);
+        if (!is_outside_camera || sprite.is_fixed)
+        {
+            // source rectangle and dest rectangle
+            SDL_Rect src_rect = sprite.src_rect;
+
+            SDL_Rect dest_rect = {(int)(transform.position.x - (sprite.is_fixed ? 0 : camera.x)),
+                                  (int)(transform.position.y - (sprite.is_fixed ? 0 : camera.y)),
+                                  (int)(sprite.width * transform.scale.x),
+                                  (int)(sprite.height * transform.scale.y)};
+
+            SDL_RenderCopyEx(renderer, asset_store->get_texture(sprite.asset_name), &src_rect, &dest_rect, transform.rotation, NULL, sprite.flip);
+        }
     }
 };

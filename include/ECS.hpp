@@ -12,6 +12,7 @@
 #include <typeindex>
 #include <functional>
 #include <list>
+#include <sol/sol.hpp>
 #include "constants.hpp"
 #include "Store.hpp"
 
@@ -192,6 +193,8 @@ public:
     int current_frame;
     int num_frames; // number of frames in the animation
     int frame_rate; // how many frame per second
+    int normal_frame_rate;
+    int sprint_frame_rate;
     bool should_loop;
     int start_time; // current ticks
     AnimationComponent(int num_frames = 1, int frame_rate = 1, bool should_loop = true);
@@ -238,7 +241,7 @@ public:
     int damage; // damage of the projectile, in percentage
     int last_emission_time;
 
-    ProjectileEmitterComponent(vec2 velocity = vec2(0), int freq = 500, int duration = 5000, bool is_friendly = true, int damage = 20);
+    ProjectileEmitterComponent(vec2 velocity = vec2(0), int freq = 500, int duration = 10000, bool is_friendly = false, int damage = 20);
 };
 
 class ProjectileComponent
@@ -270,6 +273,13 @@ public:
     TextComponent(vec2 position = vec2(0), std::string text = "", std::string font_name = "", const SDL_Color color = {0, 0, 0}, bool is_fixed = true);
 };
 
+class ScriptComponent
+{
+public:
+    sol::function fun;
+    ScriptComponent(sol::function fun = sol::lua_nil);
+};
+
 // ============================================================
 // Entity
 // ============================================================
@@ -282,7 +292,6 @@ private:
 public:
     class Registry *registry;
     Entity(int id, Registry *registry) : _id(id), registry(registry){};
-    void id(const int new_id);
     int id() const;
     void kill() const;
     bool operator==(const Entity &other) const;
@@ -522,6 +531,14 @@ class RenderGuiSystem : public System
 public:
     RenderGuiSystem();
     void update(std::shared_ptr<Registry> registry, SDL_Rect &camera);
+};
+
+class ScriptSystem : public System
+{
+public:
+    ScriptSystem();
+    void create_lua_bindings(sol::state &lua);
+    void update(double delta_time, int elapsed_time);
 };
 
 // ============================================================

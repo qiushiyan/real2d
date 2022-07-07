@@ -52,7 +52,7 @@ void RenderHealthSystem::update(SDL_Renderer *renderer, std::shared_ptr<AssetSto
 
         // create health text
         std::string health_text = std::to_string(health.health);
-        SDL_Surface *surface = TTF_RenderText_Blended(asset_store->get_font("sub_font"), health_text.c_str(), healthbar_color);
+        SDL_Surface *surface = TTF_RenderText_Blended(asset_store->get_font("sub-font"), health_text.c_str(), healthbar_color);
         SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_FreeSurface(surface);
 

@@ -1,10 +1,5 @@
 #include "ECS.hpp"
 
-void Entity::id(const int new_id)
-{
-    _id = new_id;
-}
-
 int Entity::id() const
 {
     return _id;

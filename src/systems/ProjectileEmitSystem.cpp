@@ -34,7 +34,7 @@ void ProjectileEmitSystem::emit_from(const Entity &entity, bool const_direction)
     p.group("projectiles");
     p.add_component<TransformComponent>(projectile_position, transform.scale, transform.rotation);
     p.add_component<RigidBodyComponent>(projectile_velocity);
-    p.add_component<SpriteComponent>("bullet-image", 4, 4, 1);
+    p.add_component<SpriteComponent>("bullet-texture", 4, 4, 1);
     p.add_component<BoxColliderComponent>(4, 4);
     p.add_component<ProjectileComponent>(projectile.duration, projectile.is_friendly, projectile.damage);
 
@@ -48,7 +48,10 @@ void ProjectileEmitSystem::on_mouse_clicked(MouseClickedEvent &event)
     case (SDL_BUTTON_LEFT):
         for (const auto &entity : entities())
         {
-            emit_from(entity, false);
+            if (entity.has_component<MouseControlComponent>())
+            {
+                emit_from(entity, false);
+            }
         }
         break;
     }

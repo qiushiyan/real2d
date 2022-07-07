@@ -57,6 +57,10 @@
     "list": "cpp",
     "map": "cpp",
     "ctime": "cpp",
-    "ratio": "cpp"
+    "ratio": "cpp",
+    "forward_list": "cpp",
+    "optional": "cpp",
+    "sstream": "cpp",
+    "variant": "cpp"
   }
 }

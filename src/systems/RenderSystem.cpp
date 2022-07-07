@@ -19,6 +19,7 @@ public:
 // override System::add_entity and sort by z-index
 void RenderSystem::add_entity(Entity entity)
 {
+    // sort entity when inserted
     auto it = std::upper_bound(_entities.begin(), _entities.end(), entity, [](const Entity &entity, const Entity &other)
                                { return entity.get_component<SpriteComponent>().z_index < other.get_component<SpriteComponent>().z_index; });
 

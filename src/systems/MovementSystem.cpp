@@ -62,6 +62,11 @@ void MovementSystem::update(float dt)
             {
                 sprint.in_sprint = false;
             }
+            if (entity.has_component<AnimationComponent>())
+            {
+                auto &animation = entity.get_component<AnimationComponent>();
+                animation.frame_rate = (sprint.in_sprint ? animation.sprint_frame_rate : animation.normal_frame_rate);
+            }
         }
 
         transform.position += movement;

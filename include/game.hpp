@@ -5,6 +5,7 @@
 #include "Store.hpp"
 #include "constants.hpp"
 #include <SDL2/SDL.h>
+#include <sol/sol.hpp>
 
 class Game
 {
@@ -19,6 +20,7 @@ private:
     SDL_Rect camera;
     bool debug{false};
     bool show_gui{false};
+    sol::state lua;
 
 public:
     Game();

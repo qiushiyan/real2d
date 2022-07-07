@@ -3846,6 +3846,7 @@ level = {
             },
             on_update_script = {
                 fun = function(entity, delta_time, ellapsed_time)
+                    local map_height = map_height
                     -- this function makes the fighter jet move up and down the map shooting projectiles
                     local current_position_x, current_position_y = get_position(entity)
                     local current_velocity_x, current_velocity_y = get_velocity(entity)

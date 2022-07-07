@@ -26,6 +26,10 @@ Game::Game()
 
 void Game::init()
 {
+    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::os, sol::lib::math);
+    lua.script_file("./scripts/config.lua");
+    config = lua["config"];
+
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         Logger::error("SDL initialization failed."s);
@@ -50,6 +54,9 @@ void Game::init()
         Logger::error("Creating SDL window failed."s);
         return;
     }
+
+    std::string window_title = config["title"];
+    SDL_SetWindowTitle(window, window_title.c_str());
 
     // -1 means default renderer
     renderer = SDL_CreateRenderer(
@@ -104,7 +111,7 @@ void Game::init()
 
 void Game::load_level(int level)
 {
-    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::os, sol::lib::math);
+
     LevelLoader level_loader{registry, asset_store, renderer};
     level_loader.load(lua, level);
 }

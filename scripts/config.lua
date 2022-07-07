@@ -1,5 +1,5 @@
 config = {
-    title = "Chopper and tanks",
+    title = "Real2D Game",
     full_screen = true,
     level = 1,
     resolution = {

@@ -21,6 +21,7 @@ private:
     bool debug{false};
     bool show_gui{false};
     sol::state lua;
+    sol::table config;
 
 public:
     Game();

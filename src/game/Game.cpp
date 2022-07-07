@@ -82,7 +82,11 @@ void Game::init()
     camera.w = displayMode.w;
     camera.h = displayMode.h;
 
-    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+    if (config["full_screen"])
+    {
+
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+    }
 
     registry->add_system<MovementSystem>();
     registry->add_system<RenderSystem>();
@@ -118,7 +122,8 @@ void Game::load_level(int level)
 
 void Game::setup()
 {
-    load_level(1);
+    int level = config["level"];
+    load_level(level);
     Entity label = registry->create_entity();
     SDL_Color color = {0, 255, 0};
     label.add_component<TextComponent>(vec2(window_width / 2 - 40, 10),
